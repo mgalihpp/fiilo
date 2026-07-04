@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 
-/** Big standalone visuals that get a scrub-driven parallax (desktop only). */
+// Big focal images kept out of the scroll-reveal so they show immediately.
 // Match on a substring: next/image rewrites src to /_next/image?url=%2F... so
 // an exact "/dashboard.png" match never fires — the encoded path still contains
 // these tokens.
-const PARALLAX = ['img[src*="dashboard"]', 'img[src*="platform"]'];
+const BIG_IMAGES = ['img[src*="dashboard"]', 'img[src*="platform"]'];
 
 /**
  * ScrollAnimations — the entire page's GSAP layer, in one DOM-driven file.
@@ -19,11 +19,11 @@ const PARALLAX = ['img[src*="dashboard"]', 'img[src*="platform"]'];
  *   • headings (`h1`/`h2`) rise as they scroll in;
  *   • every content block (cards, FAQ rows, banners, images) reveals with a
  *     staggered rise, de-duplicated so a card and its inner image don't fight;
- *   • the hero dashboard and platform shots get a subtle scrub parallax;
- *   • cards lift on hover.
+ *   • the hero dashboard and platform shots stay visible (no reveal);
+ *   • cards lift on hover, and compact buttons are magnetic (desktop).
  *
- * Responsive: reveals run on all viewports; the scrub parallax is desktop-only
- * (≥768px) — pointless and janky on touch. Accessibility: the whole thing is
+ * Responsive: reveals run on all viewports; magnetic buttons are desktop-only
+ * (≥768px) — pointless on touch. Accessibility: the whole thing is
  * gated on `prefers-reduced-motion`; reduced-motion users keep the static,
  * server-rendered page untouched.
  */
@@ -60,10 +60,9 @@ export default function ScrollAnimations() {
 
           const q = gsap.utils.selector(document);
 
-          // The images we parallax get opacity-only reveals (below), so their
-          // transform stays free for the scrub tween — no fighting over `y`.
-          const parallaxEls = new Set<Element>(
-            PARALLAX.flatMap((sel) => q(sel)),
+          // Resolve the big focal images so we can exclude them from reveals.
+          const bigImages = new Set<Element>(
+            BIG_IMAGES.flatMap((sel) => q(sel)),
           );
 
           // 1) Hero entrance on load — headline then its buttons pop up in
@@ -112,9 +111,9 @@ export default function ScrollAnimations() {
             return true;
           });
 
-          // Split: parallaxed images fade only; everything else rises + fades.
-          const risers = blocks.filter((el) => !parallaxEls.has(el));
-          const faders = blocks.filter((el) => parallaxEls.has(el));
+          // Big focal images (hero dashboard, platform) are excluded so they're
+          // always visible immediately; everything else rises + fades on scroll.
+          const risers = blocks.filter((el) => !bigImages.has(el));
 
           // Pre-hide up front so nothing flashes visible before its trigger.
           // (batch only creates the tween on enter, unlike `from()`, so the
@@ -141,33 +140,7 @@ export default function ScrollAnimations() {
               }),
           });
 
-          // Note: the big parallax images (hero dashboard, platform) get NO
-          // opacity reveal — they're large focal visuals that must always be
-          // visible. Hiding them risks them sticking at opacity 0 when they sit
-          // right on the fold. Their motion comes from the parallax below.
-
-          // 4) Parallax (desktop only): scrub the big visuals against scroll for
-          //    depth. `yPercent` keeps it transform-only and GPU-friendly.
-          if (desktop) {
-            for (const el of faders) {
-              gsap.fromTo(
-                el,
-                { yPercent: -8 },
-                {
-                  yPercent: 8,
-                  ease: "none",
-                  scrollTrigger: {
-                    trigger: el,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                  },
-                },
-              );
-            }
-          }
-
-          // 5) Hover lift on cards — rise + a touch of scale, driven by `quickTo`
+          // 4) Hover lift on cards — rise + a touch of scale, driven by `quickTo`
           //    so each hover reuses one tween instead of allocating per event.
           const hoverCleanups: Array<() => void> = [];
           for (const card of gsap.utils.toArray<HTMLElement>(
@@ -197,7 +170,7 @@ export default function ScrollAnimations() {
             });
           }
 
-          // 6) Magnetic buttons (desktop) — the button eases toward the cursor
+          // 5) Magnetic buttons (desktop) — the button eases toward the cursor
           //    while hovered and springs back on exit. Small, tactile, premium.
           if (desktop) {
             for (const btn of gsap.utils.toArray<HTMLElement>("main button")) {
