@@ -126,6 +126,7 @@ export default function UseCaseSection() {
             alt={tab.name}
             width={920}
             height={918}
+            unoptimized
             className="h-full w-full object-cover"
           />
         </div>

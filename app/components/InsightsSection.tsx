@@ -61,6 +61,7 @@ function Card({ title, body, img, w, h, imageFirst }: CardData) {
         alt={title}
         width={w}
         height={h}
+        unoptimized
         className="h-auto w-full"
       />
     </div>

@@ -52,6 +52,7 @@ function Card({ title, body, img, w, h, imageFirst }: (typeof CARDS)[number]) {
         alt={title}
         width={w}
         height={h}
+        unoptimized
         className="h-auto w-full"
       />
     </div>
