@@ -3,7 +3,10 @@
 import { useEffect } from "react";
 
 /** Big standalone visuals that get a scrub-driven parallax (desktop only). */
-const PARALLAX = ['img[src="/dashboard.png"]', 'img[src*="platform"]'];
+// Match on a substring: next/image rewrites src to /_next/image?url=%2F... so
+// an exact "/dashboard.png" match never fires — the encoded path still contains
+// these tokens.
+const PARALLAX = ['img[src*="dashboard"]', 'img[src*="platform"]'];
 
 /**
  * ScrollAnimations — the entire page's GSAP layer, in one DOM-driven file.
