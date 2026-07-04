@@ -113,15 +113,24 @@ export default function ScrollAnimations() {
           const risers = blocks.filter((el) => !parallaxEls.has(el));
           const faders = blocks.filter((el) => parallaxEls.has(el));
 
+          // Pre-hide up front so nothing flashes visible before its trigger.
+          // (batch only creates the tween on enter, unlike `from()`, so the
+          //  hidden state must be set explicitly or cards pop in already shown.)
+          gsap.set(risers, {
+            opacity: 0,
+            y: 56,
+            scale: 0.92,
+            filter: "blur(6px)",
+          });
           ScrollTrigger.batch(risers, {
             start: "top 88%",
             once: true,
             onEnter: (batch) =>
-              gsap.from(batch, {
-                y: 56,
-                opacity: 0,
-                scale: 0.92,
-                filter: "blur(6px)",
+              gsap.to(batch, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                filter: "blur(0px)",
                 duration: 0.8,
                 ease: "back.out(1.4)",
                 stagger: { each: 0.09, from: "start" },
