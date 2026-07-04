@@ -9,6 +9,19 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
+  /* Continuous horizontal scroll used by the founders marquee */
+  --animate-marquee: marquee 32s linear infinite;
+}
+
+/* Two identical tracks sit side by side; shifting one full track width lands
+   on the copy, so the loop is seamless. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 body {
