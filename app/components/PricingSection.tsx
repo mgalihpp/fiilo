@@ -1,3 +1,5 @@
+import AnimatedText from "./AnimatedText";
+
 /** The two pricing tiers. `included` flags drive the check/cross icons. */
 const PLANS = [
   {
@@ -57,13 +59,13 @@ function PlanCard({ name, price, featured, features }: (typeof PLANS)[number]) {
 
       <button
         type="button"
-        className={`mt-6 w-full rounded-md py-3 text-sm font-medium transition-colors ${
+        className={`group mt-6 w-full rounded-md py-3 text-sm font-medium transition-colors ${
           featured
             ? "bg-zinc-900 text-white hover:bg-zinc-800"
             : "border border-zinc-300 text-zinc-900 hover:bg-zinc-50"
         }`}
       >
-        Get Started
+        <AnimatedText text="Get Started" />
       </button>
 
       <hr className="my-6 border-zinc-200" />
@@ -139,9 +141,9 @@ export default function PricingSection() {
         </div>
         <button
           type="button"
-          className="shrink-0 rounded-md bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
+          className="group shrink-0 rounded-md bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
         >
-          Contact us
+          <AnimatedText text="Contact us" />
         </button>
       </div>
     </section>

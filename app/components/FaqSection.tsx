@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AnimatedText from "./AnimatedText";
 
 const FAQS = [
   {
@@ -74,10 +75,10 @@ export default function FaqSection() {
                 <button
                   type="button"
                   onClick={() => toggle(i)}
-                  className="flex w-full items-center justify-between gap-4 text-left"
+                  className="group flex w-full items-center justify-between gap-4 text-left"
                 >
                   <span className="text-lg font-semibold text-zinc-900">
-                    {f.q}
+                    <AnimatedText text={f.q} />
                   </span>
                   <svg
                     width="18"

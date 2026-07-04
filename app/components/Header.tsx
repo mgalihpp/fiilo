@@ -31,9 +31,9 @@ export default function Header() {
           <li>
             <button
               type="button"
-              className="flex items-center gap-1 text-[15px] font-medium text-zinc-800 transition-colors hover:text-zinc-950"
+              className="group flex items-center gap-1 text-[15px] font-medium text-zinc-800 transition-colors hover:text-zinc-950"
             >
-              All Pages
+              <AnimatedText text="All Pages" />
               <svg
                 width="12"
                 height="12"
@@ -112,9 +112,9 @@ export default function Header() {
             <li>
               <button
                 type="button"
-                className="w-full rounded-md px-2 py-2.5 text-left text-[15px] font-medium text-zinc-800 hover:bg-zinc-50"
+                className="group w-full rounded-md px-2 py-2.5 text-left text-[15px] font-medium text-zinc-800 hover:bg-zinc-50"
               >
-                All Pages
+                <AnimatedText text="All Pages" />
               </button>
             </li>
             {NAV_LINKS.map((link) => (

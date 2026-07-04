@@ -139,11 +139,17 @@ export default function ScrollAnimations() {
           });
 
           for (const el of faders) {
+            // Already on screen at load (e.g. the hero dashboard) → fade in now.
+            // A scroll trigger would leave it stuck hidden, since it's visible
+            // but hasn't yet crossed the trigger line.
+            const inView = el.getBoundingClientRect().top < window.innerHeight;
             gsap.from(el, {
               opacity: 0,
               duration: 0.9,
               ease: "power2.out",
-              scrollTrigger: { trigger: el, start: "top 85%", once: true },
+              scrollTrigger: inView
+                ? undefined
+                : { trigger: el, start: "top 85%", once: true },
             });
           }
 

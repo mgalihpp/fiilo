@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import AnimatedText from "./AnimatedText";
 
 /**
  * Per-brand testimonials. Only the image differs conceptually; here every tab
@@ -104,13 +105,13 @@ export default function UseCaseSection() {
               key={t.name}
               type="button"
               onClick={() => setActive(i)}
-              className={`text-[15px] font-medium transition-colors ${
+              className={`group text-[15px] font-medium transition-colors ${
                 i === active
                   ? "text-orange-500"
                   : "text-zinc-500 hover:text-zinc-800"
               }`}
             >
-              {t.name}
+              <AnimatedText text={t.name} />
             </button>
           ))}
         </div>

@@ -3,6 +3,8 @@
  * section): faint rounded squares behind a headline whose second line is a
  * warm-to-cool gradient, and a single CTA button.
  */
+import AnimatedText from "./AnimatedText";
+
 export default function CtaSection() {
   return (
     <section className="relative left-1/2 z-30 w-screen -translate-x-1/2 px-4 py-16 sm:px-8">
@@ -36,9 +38,9 @@ export default function CtaSection() {
           </h2>
           <button
             type="button"
-            className="mt-10 rounded-md bg-white/10 px-7 py-3 text-sm font-medium text-white ring-1 ring-white/15 transition-colors hover:bg-white/15"
+            className="group mt-10 rounded-md bg-white/10 px-7 py-3 text-sm font-medium text-white ring-1 ring-white/15 transition-colors hover:bg-white/15"
           >
-            Get Started Now
+            <AnimatedText text="Get Started Now" />
           </button>
         </div>
       </div>
