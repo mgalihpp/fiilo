@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
+import "@/lib/orpc.server";
 
 // Inter is the primary UI typeface for the whole app.
 const inter = Inter({
