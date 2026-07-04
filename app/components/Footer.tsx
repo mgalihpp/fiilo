@@ -103,13 +103,6 @@ export default function Footer() {
 
       <p className="py-10 text-center text-zinc-600">
         © 2025 Fiilo, Inc. All rights reserved.
-        <span className="text-zinc-500">Powered by </span>
-        <a
-          href="/"
-          className="font-medium text-zinc-900 underline-offset-2 hover:underline"
-        >
-          Webflow
-        </a>
       </p>
     </footer>
   );

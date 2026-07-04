@@ -1,13 +1,19 @@
+import CommandCenterSection from "./components/CommandCenterSection";
+import CtaSection from "./components/CtaSection";
 import DashboardPreview from "./components/DashboardPreview";
+import FaqSection from "./components/FaqSection";
 import FeaturesSection from "./components/FeaturesSection";
 import Footer from "./components/Footer";
 import FoundersSection from "./components/FoundersSection";
 import Frame from "./components/Frame";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
+import InsightsSection from "./components/InsightsSection";
 import OverviewSection from "./components/OverviewSection";
 import PlatformSection from "./components/PlatformSection";
+import PricingSection from "./components/PricingSection";
 import SectionDivider from "./components/SectionDivider";
+import UseCaseSection from "./components/UseCaseSection";
 
 /**
  * Landing page.
@@ -52,6 +58,18 @@ export default function Home() {
             <OverviewSection />
             <SectionDivider />
             <PlatformSection />
+            <SectionDivider />
+            <InsightsSection />
+            <SectionDivider />
+            <UseCaseSection />
+            <SectionDivider />
+            <CommandCenterSection />
+            <SectionDivider />
+            <PricingSection />
+            <SectionDivider />
+            <FaqSection />
+            <SectionDivider />
+            <CtaSection />
             <SectionDivider />
           </main>
           <Footer />
