@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 
 /** Four "AI-Powered Sales Overview" cards. Visuals in /public/features. */
 const CARDS = [
@@ -47,12 +47,10 @@ function Card({ title, body, img, w, h, imageFirst }: (typeof CARDS)[number]) {
   );
   const visual = (
     <div className={imageFirst ? "px-8 pt-8" : "px-8 pb-8"}>
-      <Image
+      <img
         src={img}
         alt={title}
-        width={w}
-        height={h}
-        unoptimized
+        loading="lazy"
         className="h-auto w-full"
       />
     </div>

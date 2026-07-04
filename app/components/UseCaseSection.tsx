@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import AnimatedText from "./AnimatedText";
 
@@ -121,12 +120,10 @@ export default function UseCaseSection() {
         {/* Portrait — the source image is a cut-out with a transparent
             background, so the orange wash comes from this gradient behind it. */}
         <div className="overflow-hidden rounded-md bg-gradient-to-br from-orange-500 to-red-600">
-          <Image
+          <img
             src="/features/usecase.avif"
             alt={tab.name}
-            width={920}
-            height={918}
-            unoptimized
+            loading="lazy"
             className="h-full w-full object-cover"
           />
         </div>

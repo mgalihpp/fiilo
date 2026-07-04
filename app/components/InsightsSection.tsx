@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 
 type CardData = {
   title: string;
@@ -56,12 +56,10 @@ function Card({ title, body, img, w, h, imageFirst }: CardData) {
   );
   const visual = (
     <div className={imageFirst ? "px-7 pt-7" : "px-7 pb-7"}>
-      <Image
+      <img
         src={img}
         alt={title}
-        width={w}
-        height={h}
-        unoptimized
+        loading="lazy"
         className="h-auto w-full"
       />
     </div>
