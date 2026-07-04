@@ -12,9 +12,17 @@ import type { ReactNode } from "react";
 export default function Marquee({
   children,
   className = "",
+  reverse = false,
+  gap = "gap-16 pr-16",
+  spread = true,
 }: {
   children: ReactNode;
   className?: string;
+  reverse?: boolean;
+  /** Gap between items + matching trailing space (e.g. "gap-3 pr-3"). */
+  gap?: string;
+  /** Spread items across the full width (few items) vs. pack them (many). */
+  spread?: boolean;
 }) {
   return (
     <div className={`group flex overflow-hidden ${className}`}>
@@ -23,7 +31,7 @@ export default function Marquee({
         <div
           key={track}
           aria-hidden={track === 1}
-          className="flex w-max min-w-full shrink-0 animate-marquee items-center justify-around gap-16 pr-16 group-hover:[animation-play-state:paused]"
+          className={`flex w-max shrink-0 animate-marquee items-center ${gap} group-hover:[animation-play-state:paused] ${spread ? "min-w-full justify-around" : ""} ${reverse ? "[animation-direction:reverse]" : ""}`}
         >
           {children}
         </div>

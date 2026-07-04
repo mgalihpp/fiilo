@@ -1,8 +1,12 @@
 import DashboardPreview from "./components/DashboardPreview";
+import FeaturesSection from "./components/FeaturesSection";
+import Footer from "./components/Footer";
 import FoundersSection from "./components/FoundersSection";
 import Frame from "./components/Frame";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
+import OverviewSection from "./components/OverviewSection";
+import PlatformSection from "./components/PlatformSection";
 import SectionDivider from "./components/SectionDivider";
 
 /**
@@ -23,7 +27,7 @@ export default function Home() {
       */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[30%] h-[720px]"
+        className="pointer-events-none absolute inset-x-0 top-[360px] h-[720px]"
       >
         {/* Pink/magenta bloom — left side */}
         <div className="absolute -left-[8%] top-0 h-[560px] w-[60%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(236,72,153,0.55),_rgba(168,85,247,0.32)_45%,_transparent_72%)] blur-3xl" />
@@ -43,7 +47,14 @@ export default function Home() {
             <SectionDivider />
             <FoundersSection />
             <SectionDivider />
+            <FeaturesSection />
+            <SectionDivider />
+            <OverviewSection />
+            <SectionDivider />
+            <PlatformSection />
+            <SectionDivider />
           </main>
+          <Footer />
         </Frame>
       </div>
     </div>
