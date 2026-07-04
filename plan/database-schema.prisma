@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// USER & TEAM
+// =============================================
+
+model User {
+  id            String   @id @default(cuid()) @map("_id")
+  clerkId       String   @unique
+  email         String   @unique
+  name          String
+  avatar        String?
+  role          String   @default("USER") // USER, MANAGER, ADMIN
+  plan          String   @default("FREE") // FREE, PRO, ENTERPRISE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  teamMembers   TeamMember[]
+  contacts      Contact[]
+  leads         Lead[]
+  deals         Deal[]
+  activities    Activity[]
+  invoices      Invoice[]
+  aiSessions    AISession[]
+  workflows     Workflow[]
+  notifications Notification[]
+}
+
+model Team {
+  id        String   @id @default(cuid()) @map("_id")
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner         User         @relation(fields: [ownerId], references: [id])
+  members       TeamMember[]
+  pipelines     Pipeline[]
+  subscriptions Subscription[]
+}
+
+model TeamMember {
+  id       String   @id @default(cuid()) @map("_id")
+  teamId   String
+  userId   String
+  role     String   @default("USER") // USER, MANAGER, ADMIN
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+// =============================================
+// CRM - CONTACTS & LEADS
+// =============================================
+
+model Contact {
+  id           String   @id @default(cuid()) @map("_id")
+  name         String
+  email        String?
+  phone        String?
+  company      String?
+  position     String?
+  enrichedData Json?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creator User   @relation(fields: [createdBy], references: [id])
+  leads   Lead[]
+  deals   Deal[]
+}
+
+model Lead {
+  id         String   @id @default(cuid()) @map("_id")
+  contactId  String
+  status     String   @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL, NEGOTIATION, WON, LOST
+  score      Float    @default(0)
+  source     String?
+  assignedTo String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contact    Contact    @relation(fields: [contactId], references: [id])
+  assignee   User?      @relation(fields: [assignedTo], references: [id])
+  activities Activity[]
+  deals      Deal[]
+}
+
+// =============================================
+// ACTIVITIES
+// =============================================
+
+model Activity {
+  id          String    @id @default(cuid()) @map("_id")
+  leadId      String?
+  dealId      String?
+  type        String    // CALL, EMAIL, MEETING, NOTE, TASK
+  description String
+  performedBy String
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  lead      Lead?  @relation(fields: [leadId], references: [id])
+  deal      Deal?  @relation(fields: [dealId], references: [id])
+  performer User   @relation(fields: [performedBy], references: [id])
+}
+
+// =============================================
+// DEAL PIPELINE
+// =============================================
+
+model Pipeline {
+  id     String   @id @default(cuid()) @map("_id")
+  name   String
+  teamId String
+  stages String[] // ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"]
+
+  team  Team   @relation(fields: [teamId], references: [id])
+  deals Deal[]
+}
+
+model Deal {
+  id                String    @id @default(cuid()) @map("_id")
+  title             String
+  leadId            String?
+  pipelineId        String
+  stage             String    @default("DISCOVERY")
+  value             Float
+  currency          String    @default("USD")
+  probability       Float     @default(0)
+  expectedCloseDate DateTime?
+  assignedTo        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  lead       Lead?      @relation(fields: [leadId], references: [id])
+  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
+  assignee   User?      @relation(fields: [assignedTo], references: [id])
+  invoice    Invoice?
+  activities Activity[]
+}
+
+// =============================================
+// INVOICING & PAYMENTS
+// =============================================
+
+model Invoice {
+  id         String        @id @default(cuid()) @map("_id")
+  dealId     String?
+  contactId  String
+  status     String        @default("DRAFT") // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  subtotal   Float
+  tax        Float         @default(0)
+  total      Float
+  dueDate    DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  deal     Deal?          @relation(fields: [dealId], references: [id])
+  contact  Contact        @relation(fields: [contactId], references: [id])
+  items    InvoiceItem[]
+  payments Payment[]
+}
+
+model InvoiceItem {
+  id          String @id @default(cuid()) @map("_id")
+  invoiceId   String
+  description String
+  quantity    Int
+  unitPrice   Float
+  amount      Float
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(cuid()) @map("_id")
+  invoiceId String
+  amount    Float
+  method    String   // CREDIT_CARD, BANK_TRANSFER, E_WALLET, CRYPTO
+  reference String?
+  paidAt    DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+// =============================================
+// AI ENGINE
+// =============================================
+
+model AISession {
+  id        String       @id @default(cuid()) @map("_id")
+  userId    String
+  context   Json?
+  createdAt DateTime     @default(now())
+
+  user     User         @relation(fields: [userId], references: [id])
+  messages AIMessage[]
+}
+
+model AIMessage {
+  id        String   @id @default(cuid()) @map("_id")
+  sessionId String
+  role      String   // USER, ASSISTANT
+  content   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  session AISession @relation(fields: [sessionId], references: [id])
+}
+
+// =============================================
+// SUBSCRIPTION & BILLING
+// =============================================
+
+model Subscription {
+  id        String    @id @default(cuid()) @map("_id")
+  teamId    String
+  stripeId  String    @unique
+  plan      String    @default("FREE") // FREE, PRO, ENTERPRISE
+  status    String    @default("ACTIVE") // ACTIVE, CANCELLED, PAST_DUE
+  startDate DateTime
+  endDate   DateTime?
+  autoRenew Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  team Team @relation(fields: [teamId], references: [id])
+}
+
+// =============================================
+// WORKFLOWS
+// =============================================
+
+model Workflow {
+  id        String           @id @default(cuid()) @map("_id")
+  name      String
+  trigger   String           // LEAD_CREATED, DEAL_STAGE_CHANGED, INVOICE_OVERDUE
+  isActive  Boolean          @default(true)
+  createdBy String
+  createdAt DateTime         @default(now())
+
+  creator User             @relation(fields: [createdBy], references: [id])
+  actions WorkflowAction[]
+}
+
+model WorkflowAction {
+  id         String @id @default(cuid()) @map("_id")
+  workflowId String
+  type       String // SEND_EMAIL, UPDATE_STATUS, CREATE_TASK, NOTIFY
+  config     Json
+  order      Int
+
+  workflow Workflow @relation(fields: [workflowId], references: [id])
+}
+
+// =============================================
+// NOTIFICATIONS
+// =============================================
+
+model Notification {
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String
+  title     String
+  message   String
+  type      String   // INFO, WARNING, SUCCESS
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

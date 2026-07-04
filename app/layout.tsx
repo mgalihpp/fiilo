@@ -1,8 +1,8 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Agentation } from "agentation";
-import "@/lib/orpc.server";
 
 // Inter is the primary UI typeface for the whole app.
 const inter = Inter({
@@ -22,9 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
-      {process.env.NODE_ENV === "development" && <Agentation />}
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${inter.variable} h-full antialiased`}>
+        <body className="min-h-full flex flex-col">{children}</body>
+        {process.env.NODE_ENV === "development" && <Agentation />}
+      </html>
+    </ClerkProvider>
   );
 }

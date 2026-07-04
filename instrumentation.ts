@@ -1,3 +1,3 @@
 export async function register() {
-  await import("./lib/orpc.server");
+  // orpc server singleton is lazily initialized on first use
 }

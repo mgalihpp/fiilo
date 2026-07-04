@@ -1,12 +1,15 @@
 import { RPCHandler } from "@orpc/server/fetch";
+import { getAuthContext } from "@/lib/clerk-sync";
 import { appRouter } from "@/lib/orpc/server";
 
 const handler = new RPCHandler(appRouter);
 
 async function handleRequest(request: Request) {
+  const context = await getAuthContext();
+
   const { response } = await handler.handle(request, {
     prefix: "/api/rpc",
-    context: {},
+    context,
   });
 
   return response ?? new Response("Not found", { status: 404 });

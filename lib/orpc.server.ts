@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createRouterClient, type RouterClient } from "@orpc/server";
-import { headers } from "next/headers";
+import { getAuthContext } from "./clerk-sync";
 import type { AppRouter } from "./orpc/server";
 import { appRouter } from "./orpc/server";
 
@@ -12,7 +12,5 @@ declare global {
 globalThis.$client =
   globalThis.$client ??
   createRouterClient(appRouter, {
-    context: async () => ({
-      headers: await headers(),
-    }),
+    context: getAuthContext,
   });
