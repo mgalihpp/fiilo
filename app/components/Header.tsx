@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import AnimatedText from "./AnimatedText";
 import Logo from "./Logo";
 
@@ -18,6 +20,7 @@ const NAV_LINKS = [
  */
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const { isLoaded, isSignedIn } = useAuth();
 
   return (
     <header className="w-full">
@@ -65,12 +68,21 @@ export default function Header() {
 
         {/* Right: CTA (desktop) + menu toggle (mobile) */}
         <div className="flex items-center gap-3">
-          <a
-            href="#signup"
-            className="group hidden rounded-md bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 md:inline-block"
-          >
-            <AnimatedText text="Create Free Account" />
-          </a>
+          {isLoaded && isSignedIn ? (
+            <Link
+              href="/dashboard"
+              className="group hidden rounded-md bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 md:inline-block"
+            >
+              <AnimatedText text="Dashboard" />
+            </Link>
+          ) : (
+            <Link
+              href="/register"
+              className="group hidden rounded-md bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 md:inline-block"
+            >
+              <AnimatedText text="Create Free Account" />
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -128,12 +140,21 @@ export default function Header() {
               </li>
             ))}
             <li className="pt-2">
-              <a
-                href="#signup"
-                className="block rounded-md bg-zinc-900 px-5 py-3 text-center text-[15px] font-semibold text-white"
-              >
-                Create Free Account
-              </a>
+              {isLoaded && isSignedIn ? (
+                <Link
+                  href="/dashboard"
+                  className="block rounded-md bg-zinc-900 px-5 py-3 text-center text-[15px] font-semibold text-white"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/register"
+                  className="block rounded-md bg-zinc-900 px-5 py-3 text-center text-[15px] font-semibold text-white"
+                >
+                  Create Free Account
+                </Link>
+              )}
             </li>
           </ul>
         </div>

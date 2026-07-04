@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -22,9 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={`${inter.variable} h-full antialiased`}>
-        <body className="min-h-full flex flex-col">{children}</body>
+        <body className="min-h-full flex flex-col">
+          <AntdRegistry>{children}</AntdRegistry>
+        </body>
         {process.env.NODE_ENV === "development" && <Agentation />}
       </html>
     </ClerkProvider>
