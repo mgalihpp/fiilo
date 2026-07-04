@@ -116,9 +116,10 @@ export default function UseCaseSection() {
         </div>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-6xl items-stretch gap-6 md:grid-cols-2">
-        {/* Portrait */}
-        <div className="overflow-hidden rounded-md">
+      <div className="mx-auto mt-12 grid max-w-5xl items-stretch gap-6 md:grid-cols-2">
+        {/* Portrait — the source image is a cut-out with a transparent
+            background, so the orange wash comes from this gradient behind it. */}
+        <div className="overflow-hidden rounded-md bg-gradient-to-br from-orange-500 to-red-600">
           <Image
             src="/features/usecase.avif"
             alt={tab.name}

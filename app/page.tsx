@@ -12,6 +12,7 @@ import InsightsSection from "./components/InsightsSection";
 import OverviewSection from "./components/OverviewSection";
 import PlatformSection from "./components/PlatformSection";
 import PricingSection from "./components/PricingSection";
+import ScrollAnimations from "./components/ScrollAnimations";
 import SectionDivider from "./components/SectionDivider";
 import UseCaseSection from "./components/UseCaseSection";
 
@@ -74,6 +75,7 @@ export default function Home() {
           </main>
           <Footer />
         </Frame>
+        <ScrollAnimations />
       </div>
     </div>
   );

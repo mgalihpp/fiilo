@@ -50,7 +50,7 @@ export default function CommandCenterSection() {
         </h2>
       </div>
 
-      <div className="mx-auto mt-14 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-14 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {TILES.map((t) => (
           <div key={t.label} className="text-center">
             <div className="flex aspect-square items-center justify-center overflow-hidden rounded-md bg-zinc-100">
