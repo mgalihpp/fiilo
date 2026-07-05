@@ -1,22 +1,26 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import {
   AppstoreOutlined,
-  FolderOutlined,
-  LineChartOutlined,
-  CheckSquareOutlined,
-  TeamOutlined,
-  MessageOutlined,
-  DollarOutlined,
   CalendarOutlined,
-  SettingOutlined,
+  CheckSquareOutlined,
+  ContactsOutlined,
+  DollarOutlined,
+  FolderOutlined,
+  FunnelPlotOutlined,
+  LineChartOutlined,
+  MessageOutlined,
   QuestionCircleOutlined,
+  SettingOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/app/components/Logo";
 
 const mainMenuItems = [
   { key: "/dashboard", icon: <AppstoreOutlined />, label: "Dashboard" },
+  { key: "/contacts", icon: <ContactsOutlined />, label: "Contacts" },
+  { key: "/leads", icon: <FunnelPlotOutlined />, label: "Leads" },
   { key: "/projects", icon: <FolderOutlined />, label: "Project" },
   { key: "/activity", icon: <LineChartOutlined />, label: "Activity" },
   { key: "/tasks", icon: <CheckSquareOutlined />, label: "My task" },

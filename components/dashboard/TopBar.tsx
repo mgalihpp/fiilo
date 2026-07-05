@@ -1,12 +1,12 @@
 "use client";
 
-import { Input } from "antd";
 import {
-  SearchOutlined,
-  DownloadOutlined,
   BellOutlined,
+  DownloadOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { UserButton } from "@clerk/nextjs";
+import { Input } from "antd";
 
 export default function TopBar() {
   return (
@@ -42,7 +42,6 @@ export default function TopBar() {
             width: 36,
             height: 36,
             borderRadius: 8,
-            border: "1px solid #e4e4e7",
             background: "#ffffff",
             display: "flex",
             alignItems: "center",
@@ -60,7 +59,6 @@ export default function TopBar() {
             width: 36,
             height: 36,
             borderRadius: 8,
-            border: "1px solid #e4e4e7",
             background: "#ffffff",
             display: "flex",
             alignItems: "center",
