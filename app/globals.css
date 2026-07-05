@@ -119,6 +119,15 @@ body {
   background: #a1a1aa;
 }
 
+/* Chat row: reveal the 3-dot options button on hover */
+.chat-more {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.chat-row:hover .chat-more {
+  opacity: 1;
+}
+
 /* ===== AI action button — single light orbiting the border ===== */
 /* Fill/layout live inline on the element; only the animated ring is here. */
 @property --ai-angle {

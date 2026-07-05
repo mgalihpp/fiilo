@@ -1,14 +1,40 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
-import { openrouter, smartModel } from "@/lib/ai";
+import { smartModel } from "@/lib/ai";
 import { getAuthContext } from "@/lib/clerk-sync";
+import { prisma } from "@/lib/prisma";
 
-// Streaming chat lives outside oRPC — a plain route handler is the native fit
-// for the AI SDK's streamed response.
 export async function POST(req: Request) {
-  const { userId } = await getAuthContext();
-  if (!userId) return new Response("Unauthorized", { status: 401 });
+  const { userId: clerkId } = await getAuthContext();
+  if (!clerkId) return new Response("Unauthorized", { status: 401 });
 
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) return new Response("Unauthorized", { status: 401 });
+
+  const {
+    messages,
+    sessionId,
+  }: { messages: UIMessage[]; sessionId?: string } = await req.json();
+
+  if (!sessionId) return new Response("sessionId required", { status: 400 });
+
+  const session = await prisma.aISession.findFirst({
+    where: { id: sessionId, userId: user.id },
+  });
+  if (!session) return new Response("Session not found", { status: 404 });
+
+  const lastMsg = messages[messages.length - 1];
+  const lastText =
+    lastMsg?.parts
+      ?.filter((p) => p.type === "text")
+      .map((p) => (p as any).text)
+      .join("") ?? "";
+
+  // Persist user message
+  if (lastMsg?.role === "user" && lastText) {
+    await prisma.aIMessage.create({
+      data: { sessionId, role: "user", content: lastText },
+    });
+  }
 
   const result = streamText({
     model: smartModel,
@@ -17,6 +43,17 @@ export async function POST(req: Request) {
       "leads, deals and invoices concisely. If asked for data you don't have, " +
       "say so and suggest where in the app to find it.",
     messages: await convertToModelMessages(messages),
+    onFinish: async (completion) => {
+      await prisma.aIMessage.create({
+        data: { sessionId, role: "assistant", content: completion.text },
+      });
+      if (session.title === "New Chat") {
+        await prisma.aISession.update({
+          where: { id: sessionId },
+          data: { title: lastText.slice(0, 60) || "New Chat" },
+        });
+      }
+    },
   });
 
   return result.toUIMessageStreamResponse();

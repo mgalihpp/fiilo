@@ -238,8 +238,10 @@ model Payment {
 model AISession {
   id        String       @id @default(cuid()) @map("_id")
   userId    String
+  title     String?      @default("New Chat")
   context   Json?
   createdAt DateTime     @default(now())
+  updatedAt DateTime?    @updatedAt
 
   user     User         @relation(fields: [userId], references: [id])
   messages AIMessage[]
