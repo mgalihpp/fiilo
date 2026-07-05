@@ -50,5 +50,15 @@ export const fiiloTheme: ThemeConfig = {
       headerColor: "#71717a",
       rowHoverBg: "#faf9f8",
     },
+    Select: {
+      // All option backgrounds derive from colorPrimary (#18181b) by default,
+      // hiding the dark text. Override every state to the same light grey so
+      // hover and selected read consistently.
+      optionSelectedBg: "#f4f4f5",
+      optionSelectedColor: "#18181b",
+      optionActiveBg: "#f4f4f5",
+      // Hovering the already-selected option; keep it in the same family.
+      controlItemBgActiveHover: "#f4f4f5",
+    },
   },
 };

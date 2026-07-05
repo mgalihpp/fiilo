@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ApartmentOutlined,
   AppstoreOutlined,
   CalendarOutlined,
   CheckSquareOutlined,
@@ -27,6 +28,7 @@ const mainMenuItems = [
   { key: "/team", icon: <TeamOutlined />, label: "Teams" },
   { key: "/messages", icon: <MessageOutlined />, label: "Message" },
   { key: "/deals", icon: <DollarOutlined />, label: "Deals" },
+  { key: "/pipeline", icon: <ApartmentOutlined />, label: "Pipeline" },
   { key: "/calendar", icon: <CalendarOutlined />, label: "Calendar" },
 ];
 
