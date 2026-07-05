@@ -34,3 +34,25 @@ export const userProcedure = protectedProcedure.use(
     return next({ context: { user } });
   },
 );
+
+// Admin-only procedure
+export const adminProcedure = userProcedure.use(
+  async ({ context, next }) => {
+    if (context.user.role !== "ADMIN") {
+      throw new ORPCError("FORBIDDEN", { message: "Admin access required" });
+    }
+
+    return next({ context });
+  },
+);
+
+// Manager or Admin procedure
+export const managerProcedure = userProcedure.use(
+  async ({ context, next }) => {
+    if (context.user.role !== "ADMIN" && context.user.role !== "MANAGER") {
+      throw new ORPCError("FORBIDDEN", { message: "Manager access required" });
+    }
+
+    return next({ context });
+  },
+);

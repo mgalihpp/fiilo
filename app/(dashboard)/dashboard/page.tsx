@@ -1,12 +1,17 @@
 "use client";
 
-import { Row, Col, Card, Table, Tag, Button } from "antd";
+import { Row, Col, Card, Table, Tag, Button, Spin, Statistic } from "antd";
 import {
   CalendarOutlined,
   ThunderboltOutlined,
   ArrowUpOutlined,
+  DollarOutlined,
+  TeamOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/lib/orpc/client";
 
 interface Contact {
   key: string;
@@ -41,6 +46,37 @@ const contactColumns: ColumnsType<Contact> = [
 ];
 
 export default function DashboardPage() {
+  const { data: stats, isLoading: statsLoading } = useQuery(
+    orpc.reports.getDashboardStats.queryOptions({ input: {} }),
+  );
+
+  const { data: revenueData } = useQuery(
+    orpc.reports.getRevenueData.queryOptions({
+      input: { groupBy: "day" },
+    }),
+  );
+
+  const { data: pipelineData } = useQuery(
+    orpc.reports.getDealPipelineData.queryOptions({ input: {} }),
+  );
+
+  const { data: activities } = useQuery(
+    orpc.reports.getActivityFeed.queryOptions({ input: { limit: 5 } }),
+  );
+
+  const { data: winRateData } = useQuery(
+    orpc.reports.getWinRate.queryOptions({ input: {} }),
+  );
+  if (statsLoading) {
+    return (
+      <div style={{ display: "grid", placeItems: "center", height: "60vh" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  const growthColor = (stats?.revenueGrowth ?? 0) >= 0 ? "#16a34a" : "#ef4444";
+
   return (
     <div style={{ fontFamily: "var(--font-inter), sans-serif" }}>
       {/* Header */}
@@ -71,24 +107,55 @@ export default function DashboardPage() {
               color: "#52525b",
             }}
           >
-            Mar 25, 2025
-          </Button>
-          <Button
-            type="primary"
-            icon={<ThunderboltOutlined />}
-            style={{
-              borderRadius: 8,
-              background: "#18181b",
-              borderColor: "#18181b",
-            }}
-          >
-            AI Support
+            Last 30 days
           </Button>
         </div>
       </div>
 
+      {/* KPI Stats */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ borderRadius: 12, border: "1px solid #e4e4e7" }}>
+            <Statistic
+              title="Total Revenue"
+              value={stats?.totalRevenue ?? 0}
+              prefix="$"
+              styles={{ content: { color: "#18181b" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ borderRadius: 12, border: "1px solid #e4e4e7" }}>
+            <Statistic
+              title="Contacts"
+              value={stats?.totalContacts ?? 0}
+              styles={{ content: { color: "#18181b" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ borderRadius: 12, border: "1px solid #e4e4e7" }}>
+            <Statistic
+              title="Active Deals"
+              value={stats?.totalDeals ?? 0}
+              styles={{ content: { color: "#18181b" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card style={{ borderRadius: 12, border: "1px solid #e4e4e7" }}>
+            <Statistic
+              title="Pipeline Value"
+              value={stats?.pipelineValue ?? 0}
+              prefix="$"
+              styles={{ content: { color: "#18181b" } }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       <Row gutter={[20, 20]}>
-        {/* Left column - Revenue + Monthly Sales + Contact Table */}
+        {/* Left column - Revenue + Pipeline + Contact Table */}
         <Col xs={24} lg={16}>
           {/* Total Revenue Card */}
           <Card
@@ -104,10 +171,10 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
                 <span style={{ fontSize: 28, fontWeight: 600, color: "#18181b" }}>
-                  $46,526.08
+                  ${(stats?.totalRevenue ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}
                 </span>
                 <span style={{ fontSize: 14, color: "#a1a1aa" }}>
-                  Revenue last month $49,236.00
+                  vs last month ${(stats?.prevRevenue ?? 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div
@@ -117,38 +184,19 @@ export default function DashboardPage() {
                   gap: 4,
                   padding: "4px 8px",
                   borderRadius: 6,
-                  background: "#f0fdf4",
-                  color: "#16a34a",
+                  background: growthColor === "#16a34a" ? "#f0fdf4" : "#fee2e2",
+                  color: growthColor,
                   fontSize: 13,
                   fontWeight: 500,
                   marginTop: 8,
                 }}
               >
-                <ArrowUpOutlined /> +55.06%
+                <ArrowUpOutlined /> {Math.round(stats?.revenueGrowth ?? 0)}%
               </div>
-            </div>
-
-            {/* Progress bars */}
-            <div style={{ display: "flex", gap: 4, height: 12, borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
-              <div style={{ flex: 3, background: "#a78bfa", borderRadius: 6 }} />
-              <div style={{ flex: 4, background: "#fb923c", borderRadius: 6 }} />
-              <div style={{ flex: 2, background: "#f472b6", borderRadius: 6 }} />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: 13,
-                color: "#71717a",
-              }}
-            >
-              <span>Next target to achieve</span>
-              <span style={{ fontWeight: 500, color: "#18181b" }}>$55,236.29</span>
             </div>
           </Card>
 
-          {/* Monthly Sales Card */}
+          {/* Revenue Trend */}
           <Card
             style={{
               borderRadius: 12,
@@ -165,37 +213,58 @@ export default function DashboardPage() {
               }}
             >
               <span style={{ fontSize: 16, fontWeight: 600, color: "#18181b" }}>
-                Monthly sales
+                Revenue Trend
               </span>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button size="small" style={{ borderRadius: 6, border: "1px solid #e4e4e7" }}>
-                  Weekly
-                </Button>
-                <Button
-                  size="small"
-                  type="primary"
-                  style={{ borderRadius: 6, background: "#18181b", borderColor: "#18181b" }}
-                >
-                  Monthly
-                </Button>
-              </div>
             </div>
 
-            {/* Placeholder chart area */}
-            <div
-              style={{
-                height: 240,
-                background: "#faf9f8",
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#a1a1aa",
-                fontSize: 14,
-              }}
-            >
-              Chart placeholder
-            </div>
+            {/* Simple bar chart */}
+            {revenueData && revenueData.length > 0 ? (
+              <div
+                style={{
+                  height: 240,
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "space-around",
+                  gap: 8,
+                  padding: "20px",
+                  borderRadius: 8,
+                }}
+              >
+                {revenueData.slice(-7).map((item, i) => {
+                  const maxRevenue = Math.max(...revenueData.map((d) => d.revenue));
+                  const height = (item.revenue / maxRevenue) * 200;
+                  return (
+                    <div key={i} style={{ flex: 1, textAlign: "center" }}>
+                      <div
+                        style={{
+                          height,
+                          background: "#ff5d30",
+                          borderRadius: 4,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <div style={{ fontSize: 11, color: "#71717a" }}>
+                        {new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div
+                style={{
+                  height: 240,
+                  background: "#faf9f8",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#a1a1aa",
+                }}
+              >
+                No revenue data
+              </div>
+            )}
           </Card>
 
           {/* Contact Table Card */}
@@ -215,9 +284,9 @@ export default function DashboardPage() {
           </Card>
         </Col>
 
-        {/* Right column - Sales Overview + Returning Visits */}
+        {/* Right column - Deal Pipeline + Win Rate */}
         <Col xs={24} lg={8}>
-          {/* Sales Overview Card */}
+          {/* Deal Pipeline Card */}
           <Card
             style={{
               borderRadius: 12,
@@ -225,103 +294,89 @@ export default function DashboardPage() {
               marginBottom: 20,
             }}
           >
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#18181b", marginBottom: 8 }}>
-              Sales overview
-            </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 24, fontWeight: 600, color: "#18181b" }}>$18,000</span>
-              <span style={{ fontSize: 13, color: "#16a34a" }}>+28.09% ↗</span>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#18181b", marginBottom: 16 }}>
+              Pipeline Stages
             </div>
 
-            {/* Bar chart placeholder */}
-            <div
-              style={{
-                height: 160,
-                background: "#faf9f8",
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "center",
-                gap: 16,
-                padding: "16px 24px",
-                marginBottom: 16,
-              }}
-            >
-              {[40, 60, 80, 100, 70, 90].map((h, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: 20,
-                    height: `${h}%`,
-                    borderRadius: 4,
-                    background: i % 2 === 0 ? "#a78bfa" : "#fb923c",
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Legend */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {[
-                { label: "Total proposal", value: "140K", color: "#a78bfa" },
-                { label: "Total qualified", value: "150K", color: "#3b82f6" },
-                { label: "Closed won", value: "120K", color: "#fb923c" },
-              ].map((item) => (
-                <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.color }} />
-                    <span style={{ fontSize: 13, color: "#52525b" }}>{item.label}</span>
+            {pipelineData && pipelineData.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {pipelineData.map((stage) => (
+                  <div key={stage.stage}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, color: "#18181b", fontWeight: 500 }}>
+                        {stage.stage}
+                      </span>
+                      <span style={{ fontSize: 13, color: "#71717a" }}>
+                        ${(stage.value / 1000).toFixed(1)}K ({stage.count})
+                      </span>
+                    </div>
+                    <div style={{ height: 6, background: "#f4f4f5", borderRadius: 3, overflow: "hidden" }}>
+                      <div
+                        style={{
+                          width: `${((stage.value / (pipelineData.reduce((sum, s) => sum + s.value, 0) || 1)) * 100).toFixed(0)}%`,
+                          height: "100%",
+                          background: "#ff5d30",
+                          borderRadius: 3,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "#18181b" }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", color: "#a1a1aa", padding: "20px" }}>
+                No deals in pipeline
+              </div>
+            )}
           </Card>
 
-          {/* Returning Visits Card */}
-          <Card
-            title="Returning visits"
-            style={{
-              borderRadius: 12,
-              border: "1px solid #e4e4e7",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {[
-                { month: "July", pct: 45, color: "#fb923c" },
-                { month: "October", pct: 36, color: "#a78bfa" },
-              ].map((item) => (
-                <div key={item.month}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontSize: 14, color: "#18181b" }}>{item.month}</span>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: "#18181b" }}>{item.pct}%</span>
-                  </div>
-                  <div style={{ height: 8, background: "#f4f4f5", borderRadius: 4, overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${item.pct}%`,
-                        height: "100%",
-                        background: item.color,
-                        borderRadius: 4,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <Button
-              block
+          {/* Win Rate Card */}
+          {winRateData && (
+            <Card
               style={{
-                marginTop: 20,
-                borderRadius: 8,
+                borderRadius: 12,
                 border: "1px solid #e4e4e7",
-                color: "#52525b",
               }}
             >
-              See All Visits
-            </Button>
-          </Card>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#18181b", marginBottom: 16 }}>
+                Win Rate Analysis
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 16,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#16a34a" }}>
+                    {winRateData.won}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#71717a", marginTop: 4 }}>Deals Won</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#ef4444" }}>
+                    {winRateData.lost}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#71717a", marginTop: 4 }}>Deals Lost</div>
+                </div>
+              </div>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "12px",
+                  background: "#f4f4f5",
+                  borderRadius: 8,
+                }}
+              >
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#ff5d30" }}>
+                  {winRateData.winRate.toFixed(1)}%
+                </div>
+                <div style={{ fontSize: 12, color: "#71717a", marginTop: 4 }}>Win Rate</div>
+              </div>
+            </Card>
+          )}
         </Col>
       </Row>
     </div>

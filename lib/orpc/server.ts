@@ -8,6 +8,8 @@ import { invoicesRouter } from "./procedures/invoices";
 import { leadsRouter } from "./procedures/leads";
 import { paymentsRouter } from "./procedures/payments";
 import { pipelineRouter } from "./procedures/pipeline";
+import { reportsRouter } from "./procedures/reports";
+import { teamRouter } from "./procedures/team";
 import { tasksRouter } from "./procedures/tasks";
 
 export const appRouter = {
@@ -22,6 +24,8 @@ export const appRouter = {
   payments: paymentsRouter,
   ai: aiRouter,
   chat: chatRouter,
+  reports: reportsRouter,
+  team: teamRouter,
 };
 
 export type AppRouter = typeof appRouter;

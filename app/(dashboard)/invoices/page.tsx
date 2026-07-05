@@ -246,8 +246,10 @@ export default function InvoicesPage() {
           <StatsCard
             title="Overdue"
             value={stats?.overdueCount ?? 0}
-            valueStyle={{
-              color: (stats?.overdueCount ?? 0) > 0 ? "#dc2626" : undefined,
+            styles={{
+              content: {
+                color: (stats?.overdueCount ?? 0) > 0 ? "#dc2626" : undefined,
+              },
             }}
           />
         </Col>

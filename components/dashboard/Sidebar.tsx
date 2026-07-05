@@ -9,13 +9,9 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   FileTextOutlined,
-  FolderOutlined,
   FunnelPlotOutlined,
-  LineChartOutlined,
-  MessageOutlined,
-  QuestionCircleOutlined,
+  BarChartOutlined,
   RobotOutlined,
-  SettingOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,9 +45,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Work",
     items: [
-      { key: "/tasks", icon: <CheckSquareOutlined />, label: "My Task" },
-      { key: "/projects", icon: <FolderOutlined />, label: "Projects" },
-      { key: "/activity", icon: <LineChartOutlined />, label: "Activity" },
+      { key: "/tasks", icon: <CheckSquareOutlined />, label: "Tasks" },
       { key: "/calendar", icon: <CalendarOutlined />, label: "Calendar" },
     ],
   },
@@ -63,22 +57,19 @@ const menuGroups: MenuGroup[] = [
     ],
   },
   {
-    label: "Team",
+    label: "Analysis",
     items: [
-      { key: "/team", icon: <TeamOutlined />, label: "Teams" },
-      { key: "/messages", icon: <MessageOutlined />, label: "Messages" },
+      { key: "/reports", icon: <BarChartOutlined />, label: "Reports" },
+      { key: "/ai-chat", icon: <RobotOutlined />, label: "AI Assistant" },
     ],
   },
   {
-    label: "Intelligence",
-    items: [{ key: "/ai-chat", icon: <RobotOutlined />, label: "AI Assistant" }],
+    label: "Team",
+    items: [{ key: "/team", icon: <TeamOutlined />, label: "Team Members" }],
   },
 ];
 
-const bottomMenuItems: MenuItem[] = [
-  { key: "/help", icon: <QuestionCircleOutlined />, label: "Help Center" },
-  { key: "/settings", icon: <SettingOutlined />, label: "Settings" },
-];
+const bottomMenuItems: MenuItem[] = [];
 
 const SIDEBAR_W = 220;
 const SIDEBAR_W_COLLAPSED = 60;
