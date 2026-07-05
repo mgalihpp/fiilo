@@ -14,7 +14,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Button, Dropdown, Input, Spin, Typography } from "antd";
 import { DefaultChatTransport } from "ai";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { orpc } from "@/lib/orpc/client";
 import type { UIMessage } from "@ai-sdk/react";
 
@@ -44,10 +44,12 @@ const COLORS = {
   aiBubble: "rgba(255, 93, 48, 0.08)",
 };
 
-const blackBtn = {
-  background: COLORS.black,
-  borderColor: COLORS.black,
-  color: "#fff",
+const btnBase: React.CSSProperties = {
+  borderRadius: 12,
+  fontWeight: 500,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -141,6 +143,7 @@ function _Chat({
   const [input, setInput] = useState("");
   const queryClient = useQueryClient();
   const { user } = useUser();
+  const chatRef = useRef<HTMLDivElement>(null);
 
   const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({
@@ -156,6 +159,11 @@ function _Chat({
     },
   });
 
+  useEffect(() => {
+    if (!chatRef.current) return;
+    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [messages]);
+
   const busy = status === "submitted" || status === "streaming";
 
   const submit = () => {
@@ -169,6 +177,7 @@ function _Chat({
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
       {/* messages */}
       <div
+        ref={chatRef}
         style={{
           flex: 1,
           overflowY: "auto",
@@ -265,10 +274,9 @@ function _Chat({
             loading={busy}
             onClick={submit}
             style={{
-              ...blackBtn,
+              ...btnBase,
               width: 52,
               height: 52,
-              borderRadius: 14,
               flexShrink: 0,
               fontSize: 18,
             }}
@@ -361,11 +369,11 @@ export default function AiChatPage() {
         <div style={{ padding: "0 16px 14px" }}>
           <Button
             block
-            type="primary"
+            type="default"
             icon={<PlusOutlined />}
             onClick={handleNew}
             loading={createMutation.isPending}
-            style={{ ...blackBtn, borderRadius: 12, height: 44, fontWeight: 500 }}
+            style={{ ...btnBase, height: 44 }}
           >
             New Chat
           </Button>
