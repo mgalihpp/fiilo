@@ -1,6 +1,11 @@
 "use client";
 
-import { AppstoreOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  PlusOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
   Button,
@@ -18,10 +23,13 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import DataTable from "@/components/ui/DataTable";
+import AiActionButton from "@/components/ai/AiActionButton";
+import AiResultModal, {
+  type AiCard,
+} from "@/components/ai/AiResultModal";
 import PipelineBoard from "@/components/deals/PipelineBoard";
+import DataTable from "@/components/ui/DataTable";
 import StatsCard from "@/components/ui/StatsCard";
 import { orpc } from "@/lib/orpc/client";
 import { DEAL_STAGES } from "@/lib/schemas/deal";
@@ -63,6 +71,7 @@ export default function DealsPage() {
   const [editing, setEditing] = useState<Deal | null>(null);
   const [open, setOpen] = useState(false);
   const [fetchLeads, setFetchLeads] = useState(false);
+  const [aiCards, setAiCards] = useState<AiCard[] | null>(null);
   const [form] = Form.useForm();
 
   const { data: listData, isLoading: listLoading } = useQuery(
@@ -80,10 +89,12 @@ export default function DealsPage() {
     }),
   );
 
-  const leadOptions = (leads?.items ?? []).map((l: { contact: { name: string } | null; id: string }) => ({
-    label: l.contact?.name ?? "Lead",
-    value: l.id,
-  }));
+  const leadOptions = (leads?.items ?? []).map(
+    (l: { contact: { name: string } | null; id: string }) => ({
+      label: l.contact?.name ?? "Lead",
+      value: l.id,
+    }),
+  );
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: orpc.deals.key() });
@@ -117,6 +128,31 @@ export default function DealsPage() {
         invalidate();
       },
       onError: () => message.error("Delete failed"),
+    }),
+  );
+
+  const RISK_COLORS: Record<string, string> = {
+    LOW: "green",
+    MEDIUM: "gold",
+    HIGH: "red",
+  };
+
+  const forecastMutation = useMutation(
+    orpc.ai.forecastDeal.mutationOptions({
+      onSuccess: (r) => {
+        setAiCards([
+          {
+            type: "forecast",
+            title: "Deal Forecast",
+            probability: r.probability,
+            risk: r.risk,
+            riskColor: RISK_COLORS[r.risk] ?? "default",
+            reasoning: r.reasoning,
+          },
+        ]);
+        invalidate();
+      },
+      onError: () => message.error("Forecast failed"),
     }),
   );
 
@@ -173,9 +209,18 @@ export default function DealsPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 140,
+      width: 220,
       render: (_, record) => (
         <Space>
+          <AiActionButton
+            label="Forecast"
+            loading={
+              forecastMutation.isPending &&
+              forecastMutation.variables?.id === record.id
+            }
+            disabled={forecastMutation.isPending}
+            onClick={() => forecastMutation.mutate({ id: record.id })}
+          />
           <Button size="small" onClick={() => openEdit(record)}>
             Edit
           </Button>
@@ -237,10 +282,16 @@ export default function DealsPage() {
               <StatsCard title="Total Deals" value={stats?.totalDeals ?? 0} />
             </Col>
             <Col span={6}>
-              <StatsCard title="Open Value" value={fmtMoney(stats?.openValue ?? 0)} />
+              <StatsCard
+                title="Open Value"
+                value={fmtMoney(stats?.openValue ?? 0)}
+              />
             </Col>
             <Col span={6}>
-              <StatsCard title="Won Value" value={fmtMoney(stats?.wonValue ?? 0)} />
+              <StatsCard
+                title="Won Value"
+                value={fmtMoney(stats?.wonValue ?? 0)}
+              />
             </Col>
             <Col span={6}>
               <StatsCard title="Win Rate" value={`${stats?.winRate ?? 0}%`} />
@@ -252,7 +303,12 @@ export default function DealsPage() {
             columns={columns}
             dataSource={listData?.items ?? []}
             loading={listLoading}
-            pagination={{ current: page, total: listData?.total ?? 0, pageSize: 10, onChange: setPage }}
+            pagination={{
+              current: page,
+              total: listData?.total ?? 0,
+              pageSize: 10,
+              onChange: setPage,
+            }}
           />
         </>
       ) : (
@@ -315,6 +371,12 @@ export default function DealsPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <AiResultModal
+        open={aiCards !== null}
+        cards={aiCards ?? []}
+        onClose={() => setAiCards(null)}
+      />
     </div>
   );
 }

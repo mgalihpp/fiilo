@@ -6,9 +6,10 @@ import {
   Button,
   Card,
   Col,
+  Form,
+  Modal,
   Row,
   Select,
-  Space,
   Table,
   Tag,
   Typography,
@@ -54,7 +55,8 @@ export default function PaymentsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
-  const [method, setMethod] = useState("BANK_TRANSFER");
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkForm] = Form.useForm();
 
   const { data: listData, isLoading } = useQuery(
     orpc.payments.list.queryOptions({ input: { page, pageSize: 10 } }),
@@ -79,11 +81,21 @@ export default function PaymentsPage() {
       onSuccess: (res) => {
         message.success(`${res.paid} invoice(s) marked paid`);
         setSelected([]);
+        setBulkOpen(false);
+        bulkForm.resetFields();
         invalidate();
       },
       onError: () => message.error("Bulk payment failed"),
     }),
   );
+
+  const onBulkSubmit = async () => {
+    const values = await bulkForm.validateFields();
+    bulkMutation.mutate({
+      invoiceIds: selected,
+      method: values.method,
+    });
+  };
 
   const paymentColumns: ColumnsType<Payment> = [
     {
@@ -166,28 +178,14 @@ export default function PaymentsPage() {
         title="Outstanding Invoices"
         style={{ marginBottom: 24 }}
         extra={
-          <Space>
-            <Select
-              value={method}
-              onChange={setMethod}
-              options={METHOD_OPTIONS}
-              style={{ width: 150 }}
-            />
-            <Button
-              type="primary"
-              disabled={selected.length === 0}
-              loading={bulkMutation.isPending}
-              onClick={() =>
-                bulkMutation.mutate({
-                  invoiceIds: selected,
-                  method: method as never,
-                })
-              }
-            >
-              Pay {selected.length > 0 ? `${selected.length} · ` : ""}
-              {fmtMoney(selectedTotal)}
-            </Button>
-          </Space>
+          <Button
+            type="primary"
+            disabled={selected.length === 0}
+            onClick={() => setBulkOpen(true)}
+          >
+            Pay {selected.length > 0 ? `${selected.length} · ` : ""}
+            {fmtMoney(selectedTotal)}
+          </Button>
         }
       >
         <Table<Outstanding>
@@ -221,6 +219,85 @@ export default function PaymentsPage() {
           />
         </Col>
       </Row>
+
+      <Modal
+        title="Confirm Payment"
+        open={bulkOpen}
+        onOk={onBulkSubmit}
+        onCancel={() => {
+          setBulkOpen(false);
+          bulkForm.resetFields();
+        }}
+        okText={`Pay ${fmtMoney(selectedTotal)}`}
+        confirmLoading={bulkMutation.isPending}
+        destroyOnHidden
+        width={480}
+      >
+        <div
+          style={{
+            background: "#f9fafb",
+            border: "1px solid #e5e7eb",
+            borderRadius: 8,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Typography.Text type="secondary">
+              {selected.length} invoice(s) selected
+            </Typography.Text>
+            <Typography.Text strong>{fmtMoney(selectedTotal)}</Typography.Text>
+          </div>
+          <div style={{ maxHeight: 180, overflow: "auto" }}>
+            {outstanding
+              .filter((i) => selected.includes(i.id))
+              .map((i, idx, arr) => (
+                <div
+                  key={i.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: idx < arr.length - 1 ? "1px solid #e5e7eb" : "none",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13 }}>
+                      #{i.id.slice(-6).toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#71717a" }}>
+                      {i.contact?.name ?? "—"}
+                    </div>
+                  </div>
+                  <Tag color={i.status === "SENT" ? "blue" : "default"}>
+                    {fmtMoney(i.total)}
+                  </Tag>
+                </div>
+              ))}
+          </div>
+        </div>
+        <Form
+          form={bulkForm}
+          layout="vertical"
+          initialValues={{ method: "BANK_TRANSFER" }}
+          style={{ marginBottom: 0 }}
+        >
+          <Form.Item
+            name="method"
+            label="Payment Method"
+            rules={[{ required: true, message: "Select a payment method" }]}
+          >
+            <Select options={METHOD_OPTIONS} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

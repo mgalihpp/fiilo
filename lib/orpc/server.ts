@@ -1,4 +1,5 @@
 import { activitiesRouter } from "./procedures/activities";
+import { aiRouter } from "./procedures/ai";
 import { contactsRouter } from "./procedures/contacts";
 import { dealsRouter } from "./procedures/deals";
 import { exampleRouter } from "./procedures/example";
@@ -18,6 +19,7 @@ export const appRouter = {
   tasks: tasksRouter,
   invoices: invoicesRouter,
   payments: paymentsRouter,
+  ai: aiRouter,
 };
 
 export type AppRouter = typeof appRouter;

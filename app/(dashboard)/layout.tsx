@@ -1,6 +1,7 @@
 "use client";
 
 import { App as AntdApp, ConfigProvider } from "antd";
+import { useState } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import TopBar from "@/components/dashboard/TopBar";
 import QueryProvider from "@/components/QueryProvider";
@@ -11,6 +12,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
     <QueryProvider>
       <ConfigProvider theme={fiiloTheme}>
@@ -18,7 +21,7 @@ export default function DashboardLayout({
         <div
           style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#faf9f8" }}
         >
-          <Sidebar />
+          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
           <div
             style={{
               flex: 1,
@@ -27,7 +30,7 @@ export default function DashboardLayout({
               minWidth: 0,
             }}
           >
-            <TopBar />
+            <TopBar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
             <main style={{ flex: 1, padding: 24, overflow: "auto" }}>
               {children}
             </main>

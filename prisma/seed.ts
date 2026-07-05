@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-function randomItem<T>(arr: T[]): T {
+function randomItem<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -223,7 +223,7 @@ async function main() {
   // ── ACTIVITIES ────────────────────────────────────
   console.log("Creating activities...");
   const activities = [];
-  const activityDescriptions: Record<string, string[]> = {
+  const activityDescriptions: Record<(typeof ACTIVITY_TYPES)[number], string[]> = {
     CALL: [
       "Initial discovery call with client",
       "Follow-up call to discuss pricing",

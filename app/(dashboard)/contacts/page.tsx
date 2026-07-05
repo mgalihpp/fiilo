@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusOutlined } from "@ant-design/icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
   Button,
@@ -12,8 +13,17 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  FileTextOutlined,
+  MailOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { useState } from "react";
+import AiActionButton from "@/components/ai/AiActionButton";
+import AiResultModal, {
+  type AiCard,
+} from "@/components/ai/AiResultModal";
 import DataTable from "@/components/ui/DataTable";
 import { orpc } from "@/lib/orpc/client";
 
@@ -33,6 +43,7 @@ export default function ContactsPage() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Contact | null>(null);
   const [open, setOpen] = useState(false);
+  const [aiCards, setAiCards] = useState<AiCard[] | null>(null);
   const [form] = Form.useForm();
 
   const { data, isLoading } = useQuery(
@@ -74,6 +85,27 @@ export default function ContactsPage() {
     }),
   );
 
+  const enrichMutation = useMutation(
+    orpc.ai.enrichContact.mutationOptions({
+      onSuccess: (r) => {
+        setAiCards([
+          {
+            type: "enrichment",
+            title: "Contact Enrichment",
+            fields: [
+              { icon: <FileTextOutlined />, label: "Industry", value: r.industry },
+              { icon: <TeamOutlined />, label: "Company size", value: r.companySize },
+              { icon: <FileTextOutlined />, label: "Summary", value: r.summary },
+              { icon: <MailOutlined />, label: "Next action", value: r.suggestedNextAction },
+            ],
+          },
+        ]);
+        invalidate();
+      },
+      onError: () => message.error("Enrichment failed"),
+    }),
+  );
+
   const openCreate = () => {
     setEditing(null);
     setOpen(true);
@@ -107,9 +139,18 @@ export default function ContactsPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 140,
+      width: 230,
       render: (_, record) => (
         <Space>
+          <AiActionButton
+            label="Enrich"
+            loading={
+              enrichMutation.isPending &&
+              enrichMutation.variables?.id === record.id
+            }
+            disabled={enrichMutation.isPending}
+            onClick={() => enrichMutation.mutate({ id: record.id })}
+          />
           <Button size="small" onClick={() => openEdit(record)}>
             Edit
           </Button>
@@ -208,6 +249,12 @@ export default function ContactsPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <AiResultModal
+        open={aiCards !== null}
+        cards={aiCards ?? []}
+        onClose={() => setAiCards(null)}
+      />
     </div>
   );
 }

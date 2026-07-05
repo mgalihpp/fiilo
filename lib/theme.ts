@@ -49,6 +49,10 @@ export const fiiloTheme: ThemeConfig = {
       headerBg: "#faf9f8",
       headerColor: "#71717a",
       rowHoverBg: "#faf9f8",
+      colorPrimaryBg: "#f4f4f5",
+      colorFillQuaternary: "#f4f4f5",
+      rowSelectedBg: "#f4f4f5",
+      rowSelectedHoverBg: "#e4e4e7",
     },
     Select: {
       colorText: "#18181b",
@@ -62,7 +66,6 @@ export const fiiloTheme: ThemeConfig = {
       colorBorder: "#d4d4d8",
       colorPrimary: "#18181b",
       controlHeight: 32,
-      paddingInline: 12,
     },
   },
 };

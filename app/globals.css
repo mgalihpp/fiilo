@@ -81,4 +81,98 @@ body {
     color: #ff5d30 !important;
     border-radius: 999px;
   }
+
+  /* Table row selection */
+  .ant-table-row-selected td {
+    background-color: #f4f4f5 !important;
+  }
+  .ant-table-row-selected:hover td {
+    background-color: #e4e4e7 !important;
+  }
+
+  /* Checkbox */
+  .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #18181b !important;
+    border-color: #18181b !important;
+  }
+  .ant-checkbox-wrapper:hover .ant-checkbox-inner {
+    border-color: #71717a !important;
+  }
+}
+
+/* Sidebar thin scrollbar */
+.sidebar-thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+.sidebar-thin-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-thin-scroll::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 4px;
+}
+.sidebar-thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* ===== AI action button — single light orbiting the border ===== */
+/* Fill/layout live inline on the element; only the animated ring is here. */
+@property --ai-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ai-orbit {
+  to {
+    --ai-angle: 360deg;
+  }
+}
+
+/* One bright arc on a transparent track — masked to a 2px border, so a single
+   highlight travels around the edge like an orbit (not a full rainbow). */
+.ai-spark-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--ai-angle),
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0) 250deg,
+    #ec4899 275deg,
+    #8b5cf6 295deg,
+    #3b82f6 315deg,
+    #22d3ee 335deg,
+    #10b981 352deg,
+    rgba(255, 255, 255, 0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* Soft glow trailing the traveling arc, like a light sweeping the edge. */
+  filter: drop-shadow(0 0 3px rgba(139, 92, 246, 0.9))
+    drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+  /* Slow, then suddenly fast each lap (ease-in), instead of constant speed. */
+  animation: ai-orbit 2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  pointer-events: none;
+}
+
+.ai-spark-btn:hover {
+  filter: brightness(1.08);
+}
+
+.ai-spark-btn:disabled {
+  cursor: default;
+  opacity: 0.75;
 }

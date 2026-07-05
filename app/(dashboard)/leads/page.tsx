@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusOutlined } from "@ant-design/icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
   Button,
@@ -14,8 +15,11 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import AiActionButton from "@/components/ai/AiActionButton";
+import AiResultModal, {
+  type AiCard,
+} from "@/components/ai/AiResultModal";
 import LeadScoreBadge from "@/components/leads/LeadScoreBadge";
 import DataTable from "@/components/ui/DataTable";
 import { orpc } from "@/lib/orpc/client";
@@ -41,6 +45,7 @@ export default function LeadsPage() {
   const [editing, setEditing] = useState<Lead | null>(null);
   const [open, setOpen] = useState(false);
   const [fetchContacts, setFetchContacts] = useState(false);
+  const [aiCards, setAiCards] = useState<AiCard[] | null>(null);
   const [form] = Form.useForm();
 
   const { data, isLoading } = useQuery(
@@ -56,10 +61,12 @@ export default function LeadsPage() {
     }),
   );
 
-  const contactOptions = (contacts?.items ?? []).map((c: { name: string; company: string | null; id: string }) => ({
-    label: c.company ? `${c.name} (${c.company})` : c.name,
-    value: c.id,
-  }));
+  const contactOptions = (contacts?.items ?? []).map(
+    (c: { name: string; company: string | null; id: string }) => ({
+      label: c.company ? `${c.name} (${c.company})` : c.name,
+      value: c.id,
+    }),
+  );
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: orpc.leads.key() });
@@ -93,6 +100,29 @@ export default function LeadsPage() {
         invalidate();
       },
       onError: () => message.error("Delete failed"),
+    }),
+  );
+
+  const scoreMutation = useMutation(
+    orpc.ai.scoreLead.mutationOptions({
+      onSuccess: (r) => {
+        const scoreLabel = r.score >= 70 ? "High" : r.score >= 40 ? "Medium" : "Low";
+        const scoreColor = r.score >= 70 ? "green" : r.score >= 40 ? "gold" : "red";
+        setAiCards([
+          {
+            type: "score",
+            title: "Lead Score",
+            score: r.score,
+            maxScore: 100,
+            label: scoreLabel,
+            labelColor: scoreColor,
+            description: r.reasoning.slice(0, 60),
+            reasoning: r.reasoning,
+          },
+        ]);
+        invalidate();
+      },
+      onError: () => message.error("Scoring failed"),
     }),
   );
 
@@ -137,9 +167,18 @@ export default function LeadsPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 140,
+      width: 220,
       render: (_, record) => (
         <Space>
+          <AiActionButton
+            label="Score"
+            loading={
+              scoreMutation.isPending &&
+              scoreMutation.variables?.id === record.id
+            }
+            disabled={scoreMutation.isPending}
+            onClick={() => scoreMutation.mutate({ id: record.id })}
+          />
           <Button size="small" onClick={() => openEdit(record)}>
             Edit
           </Button>
@@ -191,7 +230,12 @@ export default function LeadsPage() {
         columns={columns}
         dataSource={data?.items ?? []}
         loading={isLoading}
-        pagination={{ current: page, total: data?.total ?? 0, pageSize: 10, onChange: setPage }}
+        pagination={{
+          current: page,
+          total: data?.total ?? 0,
+          pageSize: 10,
+          onChange: setPage,
+        }}
       />
 
       <Modal
@@ -236,6 +280,12 @@ export default function LeadsPage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <AiResultModal
+        open={aiCards !== null}
+        cards={aiCards ?? []}
+        onClose={() => setAiCards(null)}
+      />
     </div>
   );
 }
