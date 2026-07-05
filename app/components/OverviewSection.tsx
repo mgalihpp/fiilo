@@ -50,6 +50,8 @@ function Card({ title, body, img, w, h, imageFirst }: (typeof CARDS)[number]) {
       <img
         src={img}
         alt={title}
+        width={w}
+        height={h}
         loading="lazy"
         className="h-auto w-full"
       />

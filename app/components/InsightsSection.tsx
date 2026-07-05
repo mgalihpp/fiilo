@@ -59,6 +59,8 @@ function Card({ title, body, img, w, h, imageFirst }: CardData) {
       <img
         src={img}
         alt={title}
+        width={w}
+        height={h}
         loading="lazy"
         className="h-auto w-full"
       />

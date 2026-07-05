@@ -123,6 +123,8 @@ export default function UseCaseSection() {
           <img
             src="/features/usecase.avif"
             alt={tab.name}
+            width={920}
+            height={918}
             loading="lazy"
             className="h-full w-full object-cover"
           />

@@ -233,11 +233,13 @@ export default function ScrollAnimations() {
           // refresh, ScrollTrigger uses stale positions calculated before the
           // image swap, causing sections below the fold to fire their entrance
           // animation prematurely.
-          const refreshOnLoad = () => {
-            window.removeEventListener("load", refreshOnLoad);
+          // NB: dynamic import() of GSAP runs after the "load" event may have
+          // already fired, so a plain addEventListener would never execute.
+          if (document.readyState === "complete") {
             ScrollTrigger.refresh();
-          };
-          window.addEventListener("load", refreshOnLoad);
+          } else {
+            window.addEventListener("load", () => ScrollTrigger.refresh());
+          }
 
           return () => {
             for (const fn of hoverCleanups) fn();
