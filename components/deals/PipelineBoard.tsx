@@ -1,7 +1,8 @@
 "use client";
 
-import { message } from "antd";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { App } from "antd";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { orpc } from "@/lib/orpc/client";
 import type { BoardDeal } from "./DealCard";
 import PipelineColumn from "./PipelineColumn";
@@ -9,25 +10,29 @@ import PipelineColumn from "./PipelineColumn";
 type Column = { stage: string; deals: BoardDeal[] };
 
 export default function PipelineBoard() {
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
   const [columns, setColumns] = useState<Column[]>([]);
-  const [loading, setLoading] = useState(true);
   const dragged = useRef<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await orpc.deals.board();
-      setColumns(res.columns as Column[]);
-    } catch {
-      message.error("Failed to load board");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading } = useQuery(orpc.deals.board.queryOptions());
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (data) {
+      setColumns(data.columns as Column[]);
+    }
+  }, [data]);
+
+  const moveMutation = useMutation(
+    orpc.deals.move.mutationOptions({
+      onError: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.deals.board.queryOptions().queryKey,
+        });
+        message.error("Failed to move deal");
+      },
+    }),
+  );
 
   const handleDrop = async (targetStage: string) => {
     const id = dragged.current;
@@ -39,7 +44,6 @@ export default function PipelineBoard() {
     const deal = source.deals.find((d) => d.id === id);
     if (!deal) return;
 
-    // Optimistic move; revert on failure.
     const previous = columns;
     setColumns((cols) =>
       cols.map((c) => {
@@ -53,12 +57,10 @@ export default function PipelineBoard() {
       }),
     );
 
-    try {
-      await orpc.deals.move({ id, stage: targetStage as never });
-    } catch {
-      setColumns(previous);
-      message.error("Failed to move deal");
-    }
+    moveMutation.mutate(
+      { id, stage: targetStage as never },
+      { onError: () => setColumns(previous) },
+    );
   };
 
   return (
@@ -68,7 +70,7 @@ export default function PipelineBoard() {
         gap: 16,
         overflowX: "auto",
         paddingBottom: 12,
-        opacity: loading ? 0.6 : 1,
+        opacity: isLoading ? 0.6 : 1,
       }}
     >
       {columns.map((col) => (

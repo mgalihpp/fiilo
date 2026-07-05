@@ -1,25 +1,27 @@
 "use client";
 
-import { PlusOutlined } from "@ant-design/icons";
+import { AppstoreOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import {
+  App,
   Button,
   Col,
   Form,
   Input,
   InputNumber,
   Modal,
-  message,
   Popconfirm,
   Row,
+  Segmented,
   Select,
   Space,
   Tag,
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import DataTable from "@/components/ui/DataTable";
+import PipelineBoard from "@/components/deals/PipelineBoard";
 import StatsCard from "@/components/ui/StatsCard";
 import { orpc } from "@/lib/orpc/client";
 import { DEAL_STAGES } from "@/lib/schemas/deal";
@@ -53,53 +55,74 @@ const fmtMoney = (n: number) =>
   }).format(n);
 
 export default function DealsPage() {
-  const [data, setData] = useState<Deal[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [stage, setStage] = useState<string | undefined>();
-  const [stats, setStats] = useState({
-    totalDeals: 0,
-    openValue: 0,
-    wonValue: 0,
-    winRate: 0,
-  });
-  const [leads, setLeads] = useState<{ label: string; value: string }[]>([]);
+  const [view, setView] = useState<"list" | "board">("list");
   const [editing, setEditing] = useState<Deal | null>(null);
   const [open, setOpen] = useState(false);
+  const [fetchLeads, setFetchLeads] = useState(false);
   const [form] = Form.useForm();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [res, s] = await Promise.all([
-        orpc.deals.list({ page, pageSize: 10, stage: stage as never }),
-        orpc.deals.stats(),
-      ]);
-      setData(res.items as Deal[]);
-      setTotal(res.total);
-      setStats(s);
-    } catch {
-      message.error("Failed to load deals");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, stage]);
+  const { data: listData, isLoading: listLoading } = useQuery(
+    orpc.deals.list.queryOptions({
+      input: { page, pageSize: 10, stage: stage as never },
+    }),
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: stats } = useQuery(orpc.deals.stats.queryOptions());
 
-  const openCreate = async () => {
+  const { data: leads } = useQuery(
+    orpc.leads.list.queryOptions({
+      input: { page: 1, pageSize: 100 },
+      enabled: fetchLeads,
+    }),
+  );
+
+  const leadOptions = (leads?.items ?? []).map((l: { contact: { name: string } | null; id: string }) => ({
+    label: l.contact?.name ?? "Lead",
+    value: l.id,
+  }));
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: orpc.deals.key() });
+
+  const createMutation = useMutation(
+    orpc.deals.create.mutationOptions({
+      onSuccess: () => {
+        message.success("Deal created");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const updateMutation = useMutation(
+    orpc.deals.update.mutationOptions({
+      onSuccess: () => {
+        message.success("Deal updated");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const deleteMutation = useMutation(
+    orpc.deals.remove.mutationOptions({
+      onSuccess: () => {
+        message.success("Deal deleted");
+        invalidate();
+      },
+      onError: () => message.error("Delete failed"),
+    }),
+  );
+
+  const openCreate = () => {
     setEditing(null);
-    // Load leads for the optional link dropdown.
-    const res = await orpc.leads.list({ page: 1, pageSize: 100 });
-    setLeads(
-      res.items.map((l) => ({
-        label: l.contact?.name ?? "Lead",
-        value: l.id,
-      })),
-    );
+    setFetchLeads(true);
     setOpen(true);
   };
 
@@ -110,30 +133,14 @@ export default function DealsPage() {
 
   const submit = async () => {
     const values = await form.validateFields();
-    try {
-      if (editing) {
-        await orpc.deals.update({ id: editing.id, ...values });
-        message.success("Deal updated");
-      } else {
-        await orpc.deals.create(values);
-        message.success("Deal created");
-      }
-      setOpen(false);
-      load();
-    } catch {
-      message.error("Save failed");
+    if (editing) {
+      updateMutation.mutate({ id: editing.id, ...values });
+    } else {
+      createMutation.mutate(values);
     }
   };
 
-  const remove = async (id: string) => {
-    try {
-      await orpc.deals.remove({ id });
-      message.success("Deal deleted");
-      load();
-    } catch {
-      message.error("Delete failed");
-    }
-  };
+  const remove = (id: string) => deleteMutation.mutate({ id });
 
   const columns: ColumnsType<Deal> = [
     {
@@ -199,9 +206,14 @@ export default function DealsPage() {
           Deals
         </Typography.Title>
         <Space>
-          <Link href="/pipeline">
-            <Button>Pipeline board</Button>
-          </Link>
+          <Segmented
+            value={view}
+            onChange={(v) => setView(v as "list" | "board")}
+            options={[
+              { value: "list", icon: <UnorderedListOutlined /> },
+              { value: "board", icon: <AppstoreOutlined /> },
+            ]}
+          />
           <Select
             placeholder="All stages"
             allowClear
@@ -218,28 +230,34 @@ export default function DealsPage() {
         </Space>
       </div>
 
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <StatsCard title="Total Deals" value={stats.totalDeals} />
-        </Col>
-        <Col span={6}>
-          <StatsCard title="Open Value" value={fmtMoney(stats.openValue)} />
-        </Col>
-        <Col span={6}>
-          <StatsCard title="Won Value" value={fmtMoney(stats.wonValue)} />
-        </Col>
-        <Col span={6}>
-          <StatsCard title="Win Rate" value={`${stats.winRate}%`} />
-        </Col>
-      </Row>
+      {view === "list" ? (
+        <>
+          <Row gutter={16} style={{ marginBottom: 24 }}>
+            <Col span={6}>
+              <StatsCard title="Total Deals" value={stats?.totalDeals ?? 0} />
+            </Col>
+            <Col span={6}>
+              <StatsCard title="Open Value" value={fmtMoney(stats?.openValue ?? 0)} />
+            </Col>
+            <Col span={6}>
+              <StatsCard title="Won Value" value={fmtMoney(stats?.wonValue ?? 0)} />
+            </Col>
+            <Col span={6}>
+              <StatsCard title="Win Rate" value={`${stats?.winRate ?? 0}%`} />
+            </Col>
+          </Row>
 
-      <DataTable<Deal>
-        rowKey="id"
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        pagination={{ current: page, total, pageSize: 10, onChange: setPage }}
-      />
+          <DataTable<Deal>
+            rowKey="id"
+            columns={columns}
+            dataSource={listData?.items ?? []}
+            loading={listLoading}
+            pagination={{ current: page, total: listData?.total ?? 0, pageSize: 10, onChange: setPage }}
+          />
+        </>
+      ) : (
+        <PipelineBoard />
+      )}
 
       <Modal
         title={editing ? "Edit Deal" : "New Deal"}
@@ -248,6 +266,7 @@ export default function DealsPage() {
         onCancel={() => setOpen(false)}
         okText="Save"
         destroyOnHidden
+        confirmLoading={createMutation.isPending || updateMutation.isPending}
       >
         <Form
           key={editing?.id ?? "new"}
@@ -274,7 +293,7 @@ export default function DealsPage() {
               <Select
                 showSearch
                 allowClear
-                options={leads}
+                options={leadOptions}
                 placeholder="Select a lead"
                 optionFilterProp="label"
               />

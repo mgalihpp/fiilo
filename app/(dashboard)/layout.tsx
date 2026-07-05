@@ -3,6 +3,7 @@
 import { App as AntdApp, ConfigProvider } from "antd";
 import Sidebar from "@/components/dashboard/Sidebar";
 import TopBar from "@/components/dashboard/TopBar";
+import QueryProvider from "@/components/QueryProvider";
 import { fiiloTheme } from "@/lib/theme";
 
 export default function DashboardLayout({
@@ -11,8 +12,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ConfigProvider theme={fiiloTheme}>
-      <AntdApp>
+    <QueryProvider>
+      <ConfigProvider theme={fiiloTheme}>
+        <AntdApp>
         <div
           style={{ display: "flex", minHeight: "100vh", background: "#faf9f8" }}
         >
@@ -33,5 +35,6 @@ export default function DashboardLayout({
         </div>
       </AntdApp>
     </ConfigProvider>
+    </QueryProvider>
   );
 }

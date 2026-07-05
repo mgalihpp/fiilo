@@ -2,17 +2,18 @@
 
 import { PlusOutlined } from "@ant-design/icons";
 import {
+  App,
   Button,
   Form,
   Input,
   Modal,
-  message,
   Popconfirm,
   Space,
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import DataTable from "@/components/ui/DataTable";
 import { orpc } from "@/lib/orpc/client";
 
@@ -26,31 +27,52 @@ type Contact = {
 };
 
 export default function ContactsPage() {
-  const [data, setData] = useState<Contact[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Contact | null>(null);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await orpc.contacts.list({ page, pageSize: 10, search });
-      setData(res.items as Contact[]);
-      setTotal(res.total);
-    } catch {
-      message.error("Failed to load contacts");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search]);
+  const { data, isLoading } = useQuery(
+    orpc.contacts.list.queryOptions({ input: { page, pageSize: 10, search } }),
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: orpc.contacts.key() });
+
+  const createMutation = useMutation(
+    orpc.contacts.create.mutationOptions({
+      onSuccess: () => {
+        message.success("Contact created");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const updateMutation = useMutation(
+    orpc.contacts.update.mutationOptions({
+      onSuccess: () => {
+        message.success("Contact updated");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const deleteMutation = useMutation(
+    orpc.contacts.remove.mutationOptions({
+      onSuccess: () => {
+        message.success("Contact deleted");
+        invalidate();
+      },
+      onError: () => message.error("Delete failed"),
+    }),
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -64,30 +86,14 @@ export default function ContactsPage() {
 
   const submit = async () => {
     const values = await form.validateFields();
-    try {
-      if (editing) {
-        await orpc.contacts.update({ id: editing.id, ...values });
-        message.success("Contact updated");
-      } else {
-        await orpc.contacts.create(values);
-        message.success("Contact created");
-      }
-      setOpen(false);
-      load();
-    } catch {
-      message.error("Save failed");
+    if (editing) {
+      updateMutation.mutate({ id: editing.id, ...values });
+    } else {
+      createMutation.mutate(values);
     }
   };
 
-  const remove = async (id: string) => {
-    try {
-      await orpc.contacts.remove({ id });
-      message.success("Contact deleted");
-      load();
-    } catch {
-      message.error("Delete failed");
-    }
-  };
+  const remove = (id: string) => deleteMutation.mutate({ id });
 
   const columns: ColumnsType<Contact> = [
     {
@@ -152,11 +158,11 @@ export default function ContactsPage() {
       <DataTable<Contact>
         rowKey="id"
         columns={columns}
-        dataSource={data}
-        loading={loading}
+        dataSource={data?.items ?? []}
+        loading={isLoading}
         pagination={{
           current: page,
-          total,
+          total: data?.total ?? 0,
           pageSize: 10,
           onChange: setPage,
         }}
@@ -169,6 +175,7 @@ export default function ContactsPage() {
         onCancel={() => setOpen(false)}
         okText="Save"
         destroyOnHidden
+        confirmLoading={createMutation.isPending || updateMutation.isPending}
       >
         <Form
           key={editing?.id ?? "new"}

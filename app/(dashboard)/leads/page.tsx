@@ -2,19 +2,20 @@
 
 import { PlusOutlined } from "@ant-design/icons";
 import {
+  App,
   Button,
   Form,
   Input,
   InputNumber,
   Modal,
-  message,
   Popconfirm,
   Select,
   Space,
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import LeadScoreBadge from "@/components/leads/LeadScoreBadge";
 import DataTable from "@/components/ui/DataTable";
 import { orpc } from "@/lib/orpc/client";
@@ -33,49 +34,71 @@ type Lead = {
 const STATUS_OPTIONS = LEAD_STATUSES.map((s) => ({ label: s, value: s }));
 
 export default function LeadsPage() {
-  const [data, setData] = useState<Lead[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | undefined>();
-  const [contacts, setContacts] = useState<{ label: string; value: string }[]>(
-    [],
-  );
   const [editing, setEditing] = useState<Lead | null>(null);
   const [open, setOpen] = useState(false);
+  const [fetchContacts, setFetchContacts] = useState(false);
   const [form] = Form.useForm();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await orpc.leads.list({
-        page,
-        pageSize: 10,
-        status: status as never,
-      });
-      setData(res.items as Lead[]);
-      setTotal(res.total);
-    } catch {
-      message.error("Failed to load leads");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, status]);
+  const { data, isLoading } = useQuery(
+    orpc.leads.list.queryOptions({
+      input: { page, pageSize: 10, status: status as never },
+    }),
+  );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: contacts } = useQuery(
+    orpc.contacts.list.queryOptions({
+      input: { page: 1, pageSize: 100 },
+      enabled: fetchContacts,
+    }),
+  );
 
-  const openCreate = async () => {
+  const contactOptions = (contacts?.items ?? []).map((c: { name: string; company: string | null; id: string }) => ({
+    label: c.company ? `${c.name} (${c.company})` : c.name,
+    value: c.id,
+  }));
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: orpc.leads.key() });
+
+  const createMutation = useMutation(
+    orpc.leads.create.mutationOptions({
+      onSuccess: () => {
+        message.success("Lead created");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const updateMutation = useMutation(
+    orpc.leads.update.mutationOptions({
+      onSuccess: () => {
+        message.success("Lead updated");
+        setOpen(false);
+        invalidate();
+      },
+      onError: () => message.error("Save failed"),
+    }),
+  );
+
+  const deleteMutation = useMutation(
+    orpc.leads.remove.mutationOptions({
+      onSuccess: () => {
+        message.success("Lead deleted");
+        invalidate();
+      },
+      onError: () => message.error("Delete failed"),
+    }),
+  );
+
+  const openCreate = () => {
     setEditing(null);
-    // Load contacts for the dropdown lazily when opening the form.
-    const res = await orpc.contacts.list({ page: 1, pageSize: 100 });
-    setContacts(
-      res.items.map((c) => ({
-        label: c.company ? `${c.name} (${c.company})` : c.name,
-        value: c.id,
-      })),
-    );
+    setFetchContacts(true);
     setOpen(true);
   };
 
@@ -86,30 +109,14 @@ export default function LeadsPage() {
 
   const submit = async () => {
     const values = await form.validateFields();
-    try {
-      if (editing) {
-        await orpc.leads.update({ id: editing.id, ...values });
-        message.success("Lead updated");
-      } else {
-        await orpc.leads.create(values);
-        message.success("Lead created");
-      }
-      setOpen(false);
-      load();
-    } catch {
-      message.error("Save failed");
+    if (editing) {
+      updateMutation.mutate({ id: editing.id, ...values });
+    } else {
+      createMutation.mutate(values);
     }
   };
 
-  const remove = async (id: string) => {
-    try {
-      await orpc.leads.remove({ id });
-      message.success("Lead deleted");
-      load();
-    } catch {
-      message.error("Delete failed");
-    }
-  };
+  const remove = (id: string) => deleteMutation.mutate({ id });
 
   const columns: ColumnsType<Lead> = [
     {
@@ -182,9 +189,9 @@ export default function LeadsPage() {
       <DataTable<Lead>
         rowKey="id"
         columns={columns}
-        dataSource={data}
-        loading={loading}
-        pagination={{ current: page, total, pageSize: 10, onChange: setPage }}
+        dataSource={data?.items ?? []}
+        loading={isLoading}
+        pagination={{ current: page, total: data?.total ?? 0, pageSize: 10, onChange: setPage }}
       />
 
       <Modal
@@ -194,6 +201,7 @@ export default function LeadsPage() {
         onCancel={() => setOpen(false)}
         okText="Save"
         destroyOnHidden
+        confirmLoading={createMutation.isPending || updateMutation.isPending}
       >
         <Form
           key={editing?.id ?? "new"}
@@ -209,7 +217,7 @@ export default function LeadsPage() {
             >
               <Select
                 showSearch
-                options={contacts}
+                options={contactOptions}
                 placeholder="Select a contact"
               />
             </Form.Item>
