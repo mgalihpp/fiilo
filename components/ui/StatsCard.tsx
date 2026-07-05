@@ -8,10 +8,15 @@ interface StatsCardProps extends StatisticProps {
   value: number | string;
 }
 
-export default function StatsCard({ title, value, ...rest }: StatsCardProps) {
+export default function StatsCard({ title, value, valueStyle, ...rest }: StatsCardProps) {
   return (
     <Card>
-      <Statistic title={title} value={value} {...rest} />
+      <Statistic
+        title={title}
+        value={value}
+        styles={valueStyle ? { content: valueStyle } : undefined}
+        {...rest}
+      />
     </Card>
   );
 }

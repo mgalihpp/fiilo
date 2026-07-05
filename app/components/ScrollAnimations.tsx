@@ -8,6 +8,14 @@ import { useEffect } from "react";
 // these tokens.
 const BIG_IMAGES = ['img[src*="dashboard"]', 'img[src*="platform"]'];
 
+// Kick the gsap chunks off at module eval — the moment this component's own
+// chunk is parsed (during hydration) the download starts, instead of waiting
+// for useEffect to fire. Cuts the reveal lag without bloating the entry bundle.
+const gsapModules = Promise.all([
+  import("gsap"),
+  import("gsap/ScrollTrigger"),
+]);
+
 /**
  * ScrollAnimations — the entire page's GSAP layer, in one DOM-driven file.
  *
@@ -33,10 +41,7 @@ export default function ScrollAnimations() {
     let cancelled = false;
 
     (async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
+      const [{ gsap }, { ScrollTrigger }] = await gsapModules;
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
 
@@ -205,6 +210,22 @@ export default function ScrollAnimations() {
 
           // Recompute trigger offsets once layout has settled.
           ScrollTrigger.refresh();
+
+          // On reload the browser restores scroll position, so sections above
+          // the viewport never fire batch's onEnter (it only triggers on
+          // *entering*) and would stay stuck hidden. Reveal anything already
+          // scrolled past immediately.
+          const passed = risers.filter(
+            (el) => el.getBoundingClientRect().bottom < 0,
+          );
+          if (passed.length) {
+            gsap.set(passed, {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              filter: "blur(0px)",
+            });
+          }
 
           return () => {
             for (const fn of hoverCleanups) fn();

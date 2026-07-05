@@ -6,7 +6,9 @@ import {
   CalendarOutlined,
   CheckSquareOutlined,
   ContactsOutlined,
+  CreditCardOutlined,
   DollarOutlined,
+  FileTextOutlined,
   FolderOutlined,
   FunnelPlotOutlined,
   LineChartOutlined,
@@ -29,6 +31,8 @@ const mainMenuItems = [
   { key: "/messages", icon: <MessageOutlined />, label: "Message" },
   { key: "/deals", icon: <DollarOutlined />, label: "Deals" },
   { key: "/pipeline", icon: <ApartmentOutlined />, label: "Pipeline" },
+  { key: "/invoices", icon: <FileTextOutlined />, label: "Invoices" },
+  { key: "/payments", icon: <CreditCardOutlined />, label: "Payments" },
   { key: "/calendar", icon: <CalendarOutlined />, label: "Calendar" },
 ];
 
