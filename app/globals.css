@@ -9,12 +9,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
-  /* Continuous horizontal scroll used by the founders marquee */
   --animate-marquee: marquee 32s linear infinite;
 }
 
-/* Two identical tracks sit side by side; shifting one full track width lands
-   on the copy, so the loop is seamless. */
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -30,18 +27,58 @@ body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
-/* ── Calendar: today cell ──────────────────────────────────────────────────── */
-.ant-picker-cell-today .ant-picker-cell-inner {
-  background-color: #ffd6c8 !important;
-  color: #ff5d30 !important;
-  border-radius: 999px;
-}
-.ant-picker-cell-today::before {
-  border-color: transparent !important;
-}
-.ant-picker-cell-selected .ant-picker-cell-inner,
-.ant-picker-cell-range-end .ant-picker-cell-inner {
-  background-color: #ffd6c8 !important;
-  color: #ff5d30 !important;
-  border-radius: 999px;
+/* ── Ant Design overrides ─────────────────────────────────────────────── */
+@layer base {
+  /* Select: force dark text in ALL states */
+  .ant-select {
+    color: #18181b;
+  }
+  .ant-select .ant-select-selection-item {
+    color: #18181b !important;
+    opacity: 1 !important;
+  }
+  .ant-select .ant-select-selection-placeholder {
+    color: #71717a !important;
+    opacity: 1 !important;
+  }
+  .ant-select-focused .ant-select-selection-item {
+    color: #18181b !important;
+    opacity: 1 !important;
+  }
+  .ant-select-focused .ant-select-selection-placeholder {
+    color: #71717a !important;
+    opacity: 1 !important;
+  }
+  .ant-select-focused {
+    color: #18181b;
+  }
+  .ant-select .ant-select-selection-search-input,
+  .ant-select .ant-select-selection-search-input input {
+    color: #18181b !important;
+  }
+  .ant-select .ant-select-selection-search-input::placeholder,
+  .ant-select .ant-select-selection-search-input input::placeholder {
+    color: #71717a !important;
+    opacity: 1 !important;
+  }
+  .ant-select-arrow,
+  .ant-select-clear {
+    color: #71717a;
+  }
+
+  /* Calendar: today cell */
+  .ant-picker-cell-today .ant-picker-cell-inner {
+    background-color: #ffd6c8 !important;
+    color: #ff5d30 !important;
+    border-radius: 999px;
+  }
+  .ant-picker-cell-today::before {
+    border-color: transparent !important;
+  }
+  .ant-picker-cell-selected .ant-picker-cell-inner,
+  .ant-picker-cell-range-end .ant-picker-cell-inner {
+    background-color: #ffd6c8 !important;
+    color: #ff5d30 !important;
+    border-radius: 999px;
+  }
 }
