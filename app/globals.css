@@ -29,3 +29,19 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
+
+/* ── Calendar: today cell ──────────────────────────────────────────────────── */
+.ant-picker-cell-today .ant-picker-cell-inner {
+  background-color: #ffd6c8 !important;
+  color: #ff5d30 !important;
+  border-radius: 999px;
+}
+.ant-picker-cell-today::before {
+  border-color: transparent !important;
+}
+.ant-picker-cell-selected .ant-picker-cell-inner,
+.ant-picker-cell-range-end .ant-picker-cell-inner {
+  background-color: #ffd6c8 !important;
+  color: #ff5d30 !important;
+  border-radius: 999px;
+}

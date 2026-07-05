@@ -16,7 +16,7 @@ export default function DashboardLayout({
       <ConfigProvider theme={fiiloTheme}>
         <AntdApp>
         <div
-          style={{ display: "flex", minHeight: "100vh", background: "#faf9f8" }}
+          style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#faf9f8" }}
         >
           <Sidebar />
           <div

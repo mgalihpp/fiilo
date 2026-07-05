@@ -4,6 +4,7 @@ import { dealsRouter } from "./procedures/deals";
 import { exampleRouter } from "./procedures/example";
 import { leadsRouter } from "./procedures/leads";
 import { pipelineRouter } from "./procedures/pipeline";
+import { tasksRouter } from "./procedures/tasks";
 
 export const appRouter = {
   example: exampleRouter,
@@ -12,6 +13,7 @@ export const appRouter = {
   activities: activitiesRouter,
   deals: dealsRouter,
   pipeline: pipelineRouter,
+  tasks: tasksRouter,
 };
 
 export type AppRouter = typeof appRouter;

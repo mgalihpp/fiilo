@@ -28,6 +28,8 @@ model User {
   leads         Lead[]
   assignedDeals Deal[]          @relation("DealAssignee")
   createdDeals  Deal[]          @relation("DealCreator")
+  assignedTasks Task[]          @relation("TaskAssignee")
+  createdTasks  Task[]          @relation("TaskCreator")
   activities    Activity[]
   invoices      Invoice[]
   aiSessions    AISession[]
@@ -97,6 +99,7 @@ model Lead {
   assignee   User?      @relation(fields: [assignedTo], references: [id])
   activities Activity[]
   deals      Deal[]
+  tasks      Task[]
 }
 
 // =============================================
@@ -117,6 +120,31 @@ model Activity {
   lead      Lead?  @relation(fields: [leadId], references: [id])
   deal      Deal?  @relation(fields: [dealId], references: [id])
   performer User   @relation(fields: [performedBy], references: [id])
+}
+
+// =============================================
+// TASKS
+// =============================================
+
+model Task {
+  id          String    @id @default(cuid()) @map("_id")
+  title       String
+  description String?
+  status      String    @default("TODO")
+  priority    String    @default("MEDIUM")
+  dueDate     DateTime?
+  completedAt DateTime?
+  leadId      String?
+  dealId      String?
+  assignedTo  String?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  lead     Lead? @relation(fields: [leadId], references: [id])
+  deal     Deal? @relation(fields: [dealId], references: [id])
+  assignee User? @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator  User  @relation("TaskCreator", fields: [createdBy], references: [id])
 }
 
 // =============================================
@@ -154,6 +182,7 @@ model Deal {
   creator    User       @relation("DealCreator", fields: [createdBy], references: [id])
   invoice    Invoice?
   activities Activity[]
+  tasks      Task[]
 }
 
 // =============================================
