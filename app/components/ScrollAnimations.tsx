@@ -98,7 +98,7 @@ export default function ScrollAnimations() {
               filter: "blur(8px)",
               duration: 0.9,
               ease: "expo.out",
-              scrollTrigger: { trigger: el, start: "top 85%", once: true },
+              scrollTrigger: { trigger: el, start: "top 80%", once: true },
             });
           }
 
@@ -130,7 +130,7 @@ export default function ScrollAnimations() {
             filter: "blur(6px)",
           });
           ScrollTrigger.batch(risers, {
-            start: "top 88%",
+            start: "top 80%",
             once: true,
             onEnter: (batch) =>
               gsap.to(batch, {
@@ -226,6 +226,18 @@ export default function ScrollAnimations() {
               filter: "blur(0px)",
             });
           }
+
+          // Refresh again once images finish loading — large screenshots
+          // (dashboard, platform) expand section heights after they arrive,
+          // which shifts every subsequent trigger downward. Without a second
+          // refresh, ScrollTrigger uses stale positions calculated before the
+          // image swap, causing sections below the fold to fire their entrance
+          // animation prematurely.
+          const refreshOnLoad = () => {
+            window.removeEventListener("load", refreshOnLoad);
+            ScrollTrigger.refresh();
+          };
+          window.addEventListener("load", refreshOnLoad);
 
           return () => {
             for (const fn of hoverCleanups) fn();

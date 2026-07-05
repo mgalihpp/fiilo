@@ -106,10 +106,11 @@ export default function PlatformSection() {
 
         {/* Feature pill marquees */}
         <div className="relative pb-16 pt-14">
-          <p className="mb-8 text-center text-sm text-zinc-400">
-            Never miss an opportunity
-          </p>
-          <div className="mx-auto flex max-w-4xl flex-col gap-4 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <div className="space-y-4">
+            <p className="text-center text-sm text-zinc-400">
+              Never miss an opportunity
+            </p>
+            <div className="mx-auto flex max-w-4xl flex-col gap-4 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
             {ROWS.map((row, i) => (
               <Marquee
                 key={row[0].label}
@@ -125,6 +126,7 @@ export default function PlatformSection() {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </section>
   );
